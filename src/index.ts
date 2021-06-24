@@ -47,8 +47,7 @@ var SearchModuleInstance: SearchModule;
 var ContentProtectionModuleInstance: ContentProtectionModule;
 var TimelineModuleInstance: TimelineModule;
 
-export const IS_DEV =
-  process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev";
+export const IS_DEV = false;
 
 export async function unload() {
   if (IS_DEV) {
@@ -466,7 +465,9 @@ export async function load(config: ReaderConfig): Promise<any> {
           startPosition = startPosition + 1;
         } else {
           var href = publication.getAbsoluteHref(link.href);
+          console.log("Fetching for href => ", href);
           await fetch(href).then(async (r) => {
+            console.log("Fetch resolved for href => ", href);
             let length = (await r.blob()).size;
             link.contentLength = length;
             totalContentLength += length;
@@ -484,6 +485,8 @@ export async function load(config: ReaderConfig): Promise<any> {
                 type: link.type,
               };
               if (IS_DEV) console.log(locator);
+              // this pushes the locators to the reference. There is a race condition.
+              // The "positions" are set but not all the fetches have necessarily resolved before
               positions.push(locator);
             });
             startPosition = startPosition + positionCount;
@@ -520,6 +523,7 @@ export async function load(config: ReaderConfig): Promise<any> {
           });
           publication.positions = positions;
           if (IS_DEV) console.log(positions);
+          console.log("Just set positions again with => ", positions);
         }
       });
     } else {
