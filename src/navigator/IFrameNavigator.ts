@@ -2919,7 +2919,8 @@ export default class IFrameNavigator implements Navigator {
           locations.progression * (positions.length - 1)
         );
         const locator = positions[positionIndex];
-        console.log("saveCurrentReadingPosition rcvd positios => ", positions);
+        console.log("rcvd positions ct", positions.length);
+        console.log("saveCurrentReadingPosition rcvd positions => ", positions);
         console.log("saveCurrentReadingPosition found locator => ", locator);
         locator.locations.fragment = locations.fragment;
 

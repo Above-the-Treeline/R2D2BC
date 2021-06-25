@@ -450,7 +450,10 @@ export async function load(config: ReaderConfig): Promise<any> {
       var totalContentLength = 0;
       var positions = [];
       var weight = {};
-      publication.readingOrder.map(async (link, index) => {
+
+      for (let index = 0; index < publication.readingOrder.length; index++) {
+        console.log("index", index);
+        const link = publication.readingOrder[index];
         if ((publication.metadata.rendition?.layout ?? "unknown") === "fixed") {
           const locator: Locator = {
             href: link.href,
@@ -466,37 +469,43 @@ export async function load(config: ReaderConfig): Promise<any> {
         } else {
           var href = publication.getAbsoluteHref(link.href);
           console.log("Fetching for href => ", href);
-          await fetch(href).then(async (r) => {
-            console.log("Fetch resolved for href => ", href);
-            let length = (await r.blob()).size;
-            link.contentLength = length;
-            totalContentLength += length;
-            let positionLength = 1024;
-            let positionCount = Math.max(1, Math.ceil(length / positionLength));
-            if (IS_DEV) console.log(length + " Bytes");
-            if (IS_DEV) console.log(positionCount + " Positions");
-            Array.from(Array(positionCount).keys()).map((_, position) => {
-              const locator: Locator = {
-                href: link.href,
-                locations: {
-                  progression: position / positionCount,
-                  position: startPosition + (position + 1),
-                },
-                type: link.type,
-              };
-              if (IS_DEV) console.log(locator);
-              // this pushes the locators to the reference. There is a race condition.
-              // The "positions" are set but not all the fetches have necessarily resolved before
-              positions.push(locator);
-            });
-            startPosition = startPosition + positionCount;
+          const r = await fetch(href);
+          console.log("Fetch resolved for href => ", href);
+          console.log("AFTER ONE FETCH");
+          const b = await r.blob();
+          let length = b.size;
+          link.contentLength = length;
+          totalContentLength += length;
+          let positionLength = 1024;
+          let positionCount = Math.max(1, Math.ceil(length / positionLength));
+          if (IS_DEV) console.log(length + " Bytes");
+          if (IS_DEV) console.log(positionCount + " Positions");
+          // eslint-disable-next-line no-loop-func
+          Array.from(Array(positionCount).keys()).forEach((_, position) => {
+            const locator: Locator = {
+              href: link.href,
+              locations: {
+                progression: position / positionCount,
+                position: startPosition + (position + 1),
+              },
+              type: link.type,
+            };
+            if (IS_DEV) console.log(locator);
+            // this pushes the locators to the reference. There is a race condition.
+            // The "positions" are set but not all the fetches have necessarily resolved before
+            positions.push(locator);
           });
+          startPosition = startPosition + positionCount;
+          console.log("startPosition", startPosition);
         }
         if (index + 1 === publication.readingOrder.length) {
+          console.log("LAST item index", index);
+          console.log("Last item", link);
           if (
             (publication.metadata.rendition?.layout ?? "unknown") !== "fixed"
           ) {
-            publication.readingOrder.map(async (link) => {
+            // eslint-disable-next-line no-loop-func
+            publication.readingOrder.forEach((link) => {
               if (IS_DEV) console.log(totalContentLength);
               if (IS_DEV) console.log(link.contentLength);
               link.contentWeight =
@@ -505,7 +514,7 @@ export async function load(config: ReaderConfig): Promise<any> {
               if (IS_DEV) console.log(link.contentWeight);
             });
           }
-          positions.map((locator, _index) => {
+          positions.forEach((locator, _index) => {
             let resource = positions.filter(
               (el: Locator) => el.href === decodeURI(locator.href)
             );
@@ -523,9 +532,10 @@ export async function load(config: ReaderConfig): Promise<any> {
           });
           publication.positions = positions;
           if (IS_DEV) console.log(positions);
-          console.log("Just set positions again with => ", positions);
+          console.log("Setting positions with => ", positions);
+          console.log("...Final count => ", positions.length);
         }
-      });
+      }
     } else {
       if (config.services?.positions) {
         await fetch(config.services?.positions.href)
