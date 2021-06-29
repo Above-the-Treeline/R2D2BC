@@ -305,8 +305,8 @@ export default class SearchModule implements ReaderModule {
     }
     var i = 0;
 
-    var href = this.publication.getAbsoluteHref(tocItem.href);
-    await fetch(href)
+    await this.publication
+      .fetchResource(tocItem.href)
       .then((r) => r.text())
       .then(async (_data) => {
         // ({ data, tocItem });
@@ -675,8 +675,8 @@ export default class SearchModule implements ReaderModule {
       if (tocItem === null) {
         tocItem = this.publication.readingOrder[index];
       }
-      var href = this.publication.getAbsoluteHref(tocItem.href);
-      await fetch(href)
+      await this.publication
+        .fetchResource(tocItem.href)
         .then((r) => r.text())
         .then(async (data) => {
           // ({ data, tocItem });
@@ -706,8 +706,8 @@ export default class SearchModule implements ReaderModule {
     if (tocItem === null) {
       tocItem = this.publication.readingOrder[this.delegate.currentResource()];
     }
-    var href = this.publication.getAbsoluteHref(tocItem.href);
-    await fetch(href)
+    await this.publication
+      .fetchResource(tocItem.href)
       .then((r) => r.text())
       .then(async (data) => {
         // ({ data, tocItem });

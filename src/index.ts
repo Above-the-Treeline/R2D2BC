@@ -436,6 +436,7 @@ export async function load(config: ReaderConfig): Promise<any> {
     }
     const publication: Publication = await Publication.getManifest(
       webpubManifestUrl,
+      config.api,
       store
     );
 
@@ -468,8 +469,7 @@ export async function load(config: ReaderConfig): Promise<any> {
             positions.push(locator);
             startPosition = startPosition + 1;
           } else {
-            var href = publication.getAbsoluteHref(link.href);
-            const r = await fetch(href);
+            const r = await publication.fetchResource(link.href);
             const b = await r.blob();
             let length = b.size;
             link.contentLength = length;

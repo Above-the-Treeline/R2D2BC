@@ -17,6 +17,7 @@
  * Licensed to: Bokbasen AS and CAST under one or more contributor license agreements.
  */
 
+import { NavigatorAPI } from "../navigator/IFrameNavigator";
 import Store from "../store/Store";
 import { Locator } from "./Locator";
 
@@ -69,12 +70,14 @@ export default class Publication {
   public readonly landmarks: Array<Link>;
   public readonly pageList: Array<Link>;
   public readonly images: Array<Link>;
+  public readonly api: NavigatorAPI;
   public positions: Array<Locator>;
 
   private readonly manifestUrl: URL;
 
   public static async getManifest(
     manifestUrl: URL,
+    api: NavigatorAPI,
     store?: Store
   ): Promise<Publication> {
     const fetchManifest = async (): Promise<Publication> => {
@@ -85,7 +88,7 @@ export default class Publication {
       if (store) {
         await store.set("manifest", JSON.stringify(manifestJSON));
       }
-      return new Publication(manifestJSON, manifestUrl);
+      return new Publication(manifestJSON, manifestUrl, api);
     };
 
     const tryToUpdateManifestButIgnoreResult = async (): Promise<void> => {
@@ -105,14 +108,14 @@ export default class Publication {
         // but don't await it.
         tryToUpdateManifestButIgnoreResult();
         const manifestJSON = JSON.parse(manifestString);
-        return new Publication(manifestJSON, manifestUrl);
+        return new Publication(manifestJSON, manifestUrl, api);
       }
     }
 
     return fetchManifest();
   }
 
-  public constructor(manifestJSON: any, manifestUrl: URL) {
+  public constructor(manifestJSON: any, manifestUrl: URL, api: NavigatorAPI) {
     this.metadata = manifestJSON.metadata || {};
     this.links = manifestJSON.links || [];
     this.readingOrder = manifestJSON.spine || manifestJSON.readingOrder || [];
@@ -121,7 +124,7 @@ export default class Publication {
     this.landmarks = manifestJSON.landmarks || [];
     // this.pageList = manifestJSON.parse("page-list") || [];
     this.pageList = manifestJSON["page-list"] || manifestJSON.pageList || [];
-
+    this.api = api;
     this.manifestUrl = manifestUrl;
   }
 
@@ -239,5 +242,13 @@ export default class Publication {
   public positionsByHref(href: string): Locator[] {
     const decodedHref = decodeURI(href) ?? "";
     return this.positions.filter((p: Locator) => decodedHref.includes(p.href));
+  }
+
+  public fetchResource(href: string): Promise<Response> {
+    const absoluteHref = this.getAbsoluteHref(href);
+    if (this.api?.fetchResource) {
+      return this.api.fetchResource(absoluteHref);
+    }
+    return fetch(absoluteHref);
   }
 }
