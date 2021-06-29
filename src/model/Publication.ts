@@ -75,10 +75,11 @@ export default class Publication {
 
   public static async getManifest(
     manifestUrl: URL,
+    readerFetch: (url: string, options?: RequestInit) => Promise<Response>,
     store?: Store
   ): Promise<Publication> {
     const fetchManifest = async (): Promise<Publication> => {
-      const response = await window.fetch(manifestUrl.href, {
+      const response = await readerFetch(manifestUrl.href, {
         credentials: "same-origin",
       });
       const manifestJSON = await response.json();

@@ -70,12 +70,12 @@ export type GetContent = (href: string) => Promise<string>;
 export interface NavigatorAPI {
   updateSettings: any;
   getContent: GetContent;
-
   resourceReady: any;
   resourceAtStart: any;
   resourceAtEnd: any;
   resourceFitsScreen: any;
   updateCurrentLocation: any;
+  fetch: (url: string, options?: RequestInit) => Promise<Response>;
 }
 
 export interface UpLinkConfig {
@@ -108,6 +108,7 @@ export interface IFrameNavigatorConfig {
   injectables: Array<Injectable>;
   attributes: IFrameAttributes;
   services: PublicationServices;
+  readerFetch: (url: string, options?: RequestInit) => Promise<Response>;
 }
 export interface PublicationServices {
   positions?: URL;
@@ -249,6 +250,10 @@ export default class IFrameNavigator implements Navigator {
   injectables: Array<Injectable>;
   attributes: IFrameAttributes;
   services: PublicationServices;
+  private readerFetch: (
+    url: string,
+    options?: RequestInit
+  ) => Promise<Response>;
 
   public static async create(config: IFrameNavigatorConfig): Promise<any> {
     const navigator = new this(
@@ -266,7 +271,8 @@ export default class IFrameNavigator implements Navigator {
       config.tts,
       config.injectables,
       config.attributes || { margin: 0 },
-      config.services
+      config.services,
+      config.readerFetch
     );
 
     await navigator.start(
@@ -292,7 +298,8 @@ export default class IFrameNavigator implements Navigator {
     tts: TTSModuleConfig,
     injectables: Array<Injectable>,
     attributes: IFrameAttributes,
-    services: PublicationServices
+    services: PublicationServices,
+    readerFetch: (url: string, options?: RequestInit) => Promise<Response>
   ) {
     this.settings = settings;
     this.annotator = annotator;
@@ -313,6 +320,7 @@ export default class IFrameNavigator implements Navigator {
     this.injectables = injectables;
     this.attributes = attributes || { margin: 0 };
     this.services = services;
+    this.readerFetch = readerFetch;
   }
 
   async stop() {
@@ -1681,7 +1689,7 @@ export default class IFrameNavigator implements Navigator {
               if (isSameOrigin) {
                 this.iframe.src = this.currentChapterLink.href;
               } else {
-                fetch(this.currentChapterLink.href)
+                this.readerFetch(this.currentChapterLink.href)
                   .then((r) => r.text())
                   .then(async (content) => {
                     writeIframeDoc.call(
@@ -1706,7 +1714,7 @@ export default class IFrameNavigator implements Navigator {
                   if (isSameOrigin) {
                     this.iframe2.src = href;
                   } else {
-                    fetch(href)
+                    this.readerFetch(href)
                       .then((r) => r.text())
                       .then(async (content) => {
                         writeIframe2Doc.call(this, content, href);
@@ -1731,7 +1739,7 @@ export default class IFrameNavigator implements Navigator {
                 if (isSameOrigin) {
                   this.iframe.src = href;
                 } else {
-                  fetch(href)
+                  this.readerFetch(href)
                     .then((r) => r.text())
                     .then(async (content) => {
                       writeIframeDoc.call(this, content, href);
@@ -1756,7 +1764,7 @@ export default class IFrameNavigator implements Navigator {
                   if (isSameOrigin) {
                     this.iframe2.src = this.currentChapterLink.href;
                   } else {
-                    fetch(this.currentChapterLink.href)
+                    this.readerFetch(this.currentChapterLink.href)
                       .then((r) => r.text())
                       .then(async (content) => {
                         writeIframe2Doc.call(
@@ -1782,7 +1790,7 @@ export default class IFrameNavigator implements Navigator {
             if (isSameOrigin) {
               this.iframe.src = this.currentChapterLink.href;
             } else {
-              fetch(this.currentChapterLink.href)
+              this.readerFetch(this.currentChapterLink.href)
                 .then((r) => r.text())
                 .then(async (content) => {
                   writeIframeDoc.call(
@@ -1815,7 +1823,7 @@ export default class IFrameNavigator implements Navigator {
               }
             }
           } else {
-            fetch(this.currentChapterLink.href)
+            this.readerFetch(this.currentChapterLink.href)
               .then((r) => r.text())
               .then(async (content) => {
                 writeIframeDoc.call(
@@ -1830,7 +1838,7 @@ export default class IFrameNavigator implements Navigator {
                   this.currentChapterLink.href
                 );
                 var href = this.publication.getAbsoluteHref(next.href);
-                fetch(href)
+                this.readerFetch(href)
                   .then((r) => r.text())
                   .then(async (content) => {
                     writeIframe2Doc.call(this, content, href);
@@ -1852,13 +1860,13 @@ export default class IFrameNavigator implements Navigator {
                 this.iframe2.src = this.currentChapterLink.href;
               }
             } else {
-              fetch(href)
+              this.readerFetch(href)
                 .then((r) => r.text())
                 .then(async (content) => {
                   writeIframeDoc.call(this, content, href);
                 });
               if (this.iframe2) {
-                fetch(this.currentChapterLink.href)
+                this.readerFetch(this.currentChapterLink.href)
                   .then((r) => r.text())
                   .then(async (content) => {
                     writeIframe2Doc.call(
@@ -1876,7 +1884,7 @@ export default class IFrameNavigator implements Navigator {
             if (isSameOrigin) {
               this.iframe2.src = this.currentChapterLink.href;
             } else {
-              fetch(this.currentChapterLink.href)
+              this.readerFetch(this.currentChapterLink.href)
                 .then((r) => r.text())
                 .then(async (content) => {
                   writeIframe2Doc.call(
@@ -1892,7 +1900,7 @@ export default class IFrameNavigator implements Navigator {
         if (isSameOrigin) {
           this.iframe.src = this.currentChapterLink.href;
         } else {
-          fetch(this.currentChapterLink.href)
+          this.readerFetch(this.currentChapterLink.href)
             .then((r) => r.text())
             .then(async (content) => {
               writeIframeDoc.call(this, content, this.currentChapterLink.href);

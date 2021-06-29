@@ -35,6 +35,7 @@ import TextHighlighter from "./modules/highlight/TextHighlighter";
 import { Locator } from "./model/Locator";
 import TimelineModule from "./modules/positions/TimelineModule";
 import { getUserAgentRegExp } from "browserslist-useragent-regexp";
+import { initReaderFetch } from "./utils/Fetch";
 
 var R2Settings: UserSettings;
 var R2TTSSettings: TTSSettings;
@@ -47,8 +48,7 @@ var SearchModuleInstance: SearchModule;
 var ContentProtectionModuleInstance: ContentProtectionModule;
 var TimelineModuleInstance: TimelineModule;
 
-export const IS_DEV =
-  process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev";
+export const IS_DEV = false;
 
 export async function unload() {
   if (IS_DEV) {
@@ -428,6 +428,7 @@ export async function load(config: ReaderConfig): Promise<any> {
       useLocalStorage: config.useLocalStorage,
     });
 
+    const readerFetch = initReaderFetch(config);
     var annotator = new LocalAnnotator({ store: store });
 
     var upLink: UpLinkConfig;
@@ -436,6 +437,7 @@ export async function load(config: ReaderConfig): Promise<any> {
     }
     const publication: Publication = await Publication.getManifest(
       webpubManifestUrl,
+      readerFetch,
       store
     );
 
@@ -469,7 +471,7 @@ export async function load(config: ReaderConfig): Promise<any> {
             startPosition = startPosition + 1;
           } else {
             var href = publication.getAbsoluteHref(link.href);
-            const r = await fetch(href);
+            const r = await readerFetch(href);
             const b = await r.blob();
             let length = b.size;
             link.contentLength = length;
@@ -523,14 +525,14 @@ export async function load(config: ReaderConfig): Promise<any> {
       if (IS_DEV) console.log(positions);
     } else {
       if (config.services?.positions) {
-        await fetch(config.services?.positions.href)
+        await readerFetch(config.services?.positions.href)
           .then((r) => r.text())
           .then(async (content) => {
             publication.positions = JSON.parse(content).positions;
           });
       }
       if (config.services?.weight) {
-        await fetch(config.services?.weight.href)
+        await readerFetch(config.services?.weight.href)
           .then((r) => r.text())
           .then(async (content) => {
             if (
@@ -579,6 +581,7 @@ export async function load(config: ReaderConfig): Promise<any> {
           : config.injectables,
       attributes: config.attributes,
       services: config.services,
+      readerFetch,
     });
 
     // Highlighter
@@ -641,6 +644,7 @@ export async function load(config: ReaderConfig): Promise<any> {
         delegate: R2Navigator,
         publication: publication,
         highlighter: D2Highlighter,
+        readerFetch,
         ...config.search,
       }).then(function (searchModule) {
         SearchModuleInstance = searchModule;

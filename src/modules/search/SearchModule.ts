@@ -43,6 +43,7 @@ export interface SearchModuleConfig extends SearchModuleProperties {
   headerMenu: HTMLElement;
   delegate: IFrameNavigator;
   highlighter: TextHighlighter;
+  readerFetch: (url: string, options?: RequestInit) => Promise<Response>;
 }
 
 export default class SearchModule implements ReaderModule {
@@ -58,6 +59,10 @@ export default class SearchModule implements ReaderModule {
   private bookSearchResult: any = [];
   private currentHighlights: any = [];
   private highlighter: TextHighlighter;
+  private readerFetch: (
+    url: string,
+    options?: RequestInit
+  ) => Promise<Response>;
 
   public static async create(config: SearchModuleConfig) {
     const search = new this(
@@ -66,7 +71,8 @@ export default class SearchModule implements ReaderModule {
       config.publication,
       config as SearchModuleProperties,
       config.api,
-      config.highlighter
+      config.highlighter,
+      config.readerFetch
     );
 
     await search.start();
@@ -79,7 +85,8 @@ export default class SearchModule implements ReaderModule {
     publication: Publication,
     properties: SearchModuleProperties,
     api: SearchModuleAPI,
-    highlighter: TextHighlighter
+    highlighter: TextHighlighter,
+    readerFetch: (url: string, options?: RequestInit) => Promise<Response>
   ) {
     this.delegate = delegate;
     this.headerMenu = headerMenu;
@@ -87,6 +94,7 @@ export default class SearchModule implements ReaderModule {
     this.properties = properties;
     this.api = api;
     this.highlighter = highlighter;
+    this.readerFetch = readerFetch;
   }
 
   async stop() {
@@ -306,7 +314,7 @@ export default class SearchModule implements ReaderModule {
     var i = 0;
 
     var href = this.publication.getAbsoluteHref(tocItem.href);
-    await fetch(href)
+    await this.readerFetch(href)
       .then((r) => r.text())
       .then(async (_data) => {
         // ({ data, tocItem });
@@ -676,7 +684,7 @@ export default class SearchModule implements ReaderModule {
         tocItem = this.publication.readingOrder[index];
       }
       var href = this.publication.getAbsoluteHref(tocItem.href);
-      await fetch(href)
+      await this.readerFetch(href)
         .then((r) => r.text())
         .then(async (data) => {
           // ({ data, tocItem });
@@ -707,7 +715,7 @@ export default class SearchModule implements ReaderModule {
       tocItem = this.publication.readingOrder[this.delegate.currentResource()];
     }
     var href = this.publication.getAbsoluteHref(tocItem.href);
-    await fetch(href)
+    await this.readerFetch(href)
       .then((r) => r.text())
       .then(async (data) => {
         // ({ data, tocItem });
