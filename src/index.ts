@@ -472,8 +472,10 @@ export async function load(config: ReaderConfig): Promise<any> {
           } else {
             var href = publication.getAbsoluteHref(link.href);
             const r = await readerFetch(href);
+            console.log("rcvd response", r);
             const b = await r.blob();
             let length = b.size;
+            console.log(length);
             link.contentLength = length;
             totalContentLength += length;
             let positionLength = 1024;
