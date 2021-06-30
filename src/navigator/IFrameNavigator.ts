@@ -123,6 +123,7 @@ export interface Injectable {
   systemFont?: boolean;
   appearance?: string;
   async?: boolean;
+  inject?: (iframe: HTMLIFrameElement) => Promise<void>;
 }
 export interface SelectionMenuItem {
   id: string;
@@ -444,6 +445,7 @@ export default class IFrameNavigator implements Navigator {
         if (
           (this.publication.metadata.rendition?.layout ?? "unknown") === "fixed"
         ) {
+          console.log("CREATING IFRAME2");
           var spread_right = document.createElement("div");
           spreads.appendChild(spread_right);
           this.iframe2 = document.createElement("iframe");
@@ -1504,6 +1506,8 @@ export default class IFrameNavigator implements Navigator {
 
       // Inject Readium CSS into Iframe Head
       const head = this.iframe.contentDocument.head;
+      await this.injectFunctionInjectables(this.iframe);
+
       if (head) {
         head.insertBefore(
           IFrameNavigator.createBase(this.currentChapterLink.href),
@@ -1615,6 +1619,21 @@ export default class IFrameNavigator implements Navigator {
       this.abortOnError();
       return new Promise<void>((_, reject) => reject(err)).catch(() => {});
     }
+  }
+
+  private injectFunctionInjectables(
+    iframe: HTMLIFrameElement
+  ): Promise<void[]> {
+    return Promise.all(
+      this.injectables.map(async (injectable) => {
+        if (
+          injectable.type === "function" &&
+          typeof injectable.inject === "function"
+        ) {
+          await injectable.inject(iframe);
+        }
+      })
+    );
   }
 
   private abortOnError() {
