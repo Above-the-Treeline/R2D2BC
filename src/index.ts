@@ -47,8 +47,15 @@ var SearchModuleInstance: SearchModule;
 var ContentProtectionModuleInstance: ContentProtectionModule;
 var TimelineModuleInstance: TimelineModule;
 
-export const IS_DEV =
-  process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev";
+const isDev = () => {
+  const { env } = process;
+  if (env.R2D2BC_SHOW_LOGS === "false") {
+    return false;
+  }
+  return env.NODE_ENV === "development" || env.NODE_ENV === "dev";
+};
+
+export const IS_DEV = isDev();
 
 export async function unload() {
   if (IS_DEV) {

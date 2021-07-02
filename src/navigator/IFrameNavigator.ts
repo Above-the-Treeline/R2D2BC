@@ -1628,7 +1628,7 @@ export default class IFrameNavigator implements Navigator {
     this.precessContentForIframe();
   }
 
-  private precessContentForIframe() {
+  private async precessContentForIframe() {
     const self = this;
     var index = this.publication.getSpineIndex(this.currentChapterLink.href);
     var even: boolean = index % 2 === 1;
@@ -1777,25 +1777,26 @@ export default class IFrameNavigator implements Navigator {
           }
         }
       } else {
-        this.api?.getContent(this.currentChapterLink.href).then((content) => {
-          if (content === undefined) {
-            if (isSameOrigin) {
-              this.iframe.src = this.currentChapterLink.href;
-            } else {
-              fetch(this.currentChapterLink.href)
-                .then((r) => r.text())
-                .then(async (content) => {
-                  writeIframeDoc.call(
-                    this,
-                    content,
-                    this.currentChapterLink.href
-                  );
-                });
-            }
+        console.log("retrieving content... => ", this.currentChapterLink.href);
+        const content = await this.api.getContent(this.currentChapterLink.href);
+        console.log(content);
+        if (!content) {
+          if (isSameOrigin) {
+            this.iframe.src = this.currentChapterLink.href;
           } else {
-            writeIframeDoc.call(this, content, this.currentChapterLink.href);
+            return fetch(this.currentChapterLink.href)
+              .then((r) => r.text())
+              .then(async (content) => {
+                writeIframeDoc.call(
+                  this,
+                  content,
+                  this.currentChapterLink.href
+                );
+              });
           }
-        });
+        } else {
+          writeIframeDoc.call(this, content, this.currentChapterLink.href);
+        }
       }
     } else {
       if (
@@ -1890,8 +1891,11 @@ export default class IFrameNavigator implements Navigator {
         }
       } else {
         if (isSameOrigin) {
+          console.log("Setting iframe.src =>", this.currentChapterLink.href);
           this.iframe.src = this.currentChapterLink.href;
+          console.log("Done setting iframe content");
         } else {
+          console.log("FETCHING IFRAME.SRC", this.currentChapterLink.href);
           fetch(this.currentChapterLink.href)
             .then((r) => r.text())
             .then(async (content) => {
@@ -2595,7 +2599,7 @@ export default class IFrameNavigator implements Navigator {
     }
   }
 
-  navigate(locator: Locator): void {
+  async navigate(locator: Locator): Promise<void> {
     const exists = this.publication.getTOCItem(locator.href);
     if (exists) {
       var isCurrentLoaded = false;
@@ -2752,7 +2756,8 @@ export default class IFrameNavigator implements Navigator {
         this.newPosition = locator;
         this.currentTOCRawLink = locator.href;
 
-        this.precessContentForIframe();
+        await this.precessContentForIframe();
+        console.log("done sync precessContentForIframe");
 
         if (locator.locations.fragment === undefined) {
           this.currentTocUrl = null;
@@ -2772,6 +2777,7 @@ export default class IFrameNavigator implements Navigator {
             this.contentProtectionModule.recalculate(300);
           }
           if (this.annotationModule !== undefined) {
+            console.log("drawing highlights...");
             this.annotationModule.drawHighlights();
             this.annotationModule.showHighlights();
           } else {

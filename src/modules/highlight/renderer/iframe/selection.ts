@@ -136,7 +136,11 @@ export function createOrderedRange(
   endOffset: number
 ): Range | undefined {
   const range = new Range(); // document.createRange()
+  console.log("startNode", startNode);
+  console.log("startOffset", startOffset);
   range.setStart(startNode, startOffset);
+  console.log("endNode", endNode);
+  console.log("endOffset", endOffset);
   range.setEnd(endNode, endOffset);
   if (!range.collapsed) {
     if (IS_DEV) {
@@ -255,11 +259,12 @@ export function convertRangeInfo(
   documant: Document,
   rangeInfo: IRangeInfo
 ): Range | undefined {
+  console.log(rangeInfo);
   const startElement = documant.querySelector(
     rangeInfo.startContainerElementCssSelector
   );
   if (!startElement) {
-    if (IS_DEV) {
+    if (true) {
       console.log("^^^ convertRangeInfo NO START ELEMENT CSS SELECTOR?!");
     }
     return undefined;
@@ -270,7 +275,7 @@ export function convertRangeInfo(
       rangeInfo.startContainerChildTextNodeIndex >=
       startElement.childNodes.length
     ) {
-      if (IS_DEV) {
+      if (true) {
         console.log(
           "^^^ convertRangeInfo rangeInfo.startContainerChildTextNodeIndex >= startElement.childNodes.length?!"
         );
@@ -280,7 +285,7 @@ export function convertRangeInfo(
     startContainer =
       startElement.childNodes[rangeInfo.startContainerChildTextNodeIndex];
     if (startContainer.nodeType !== Node.TEXT_NODE) {
-      if (IS_DEV) {
+      if (true) {
         console.log(
           "^^^ convertRangeInfo startContainer.nodeType !== Node.TEXT_NODE?!"
         );
@@ -292,7 +297,7 @@ export function convertRangeInfo(
     rangeInfo.endContainerElementCssSelector
   );
   if (!endElement) {
-    if (IS_DEV) {
+    if (true) {
       console.log("^^^ convertRangeInfo NO END ELEMENT CSS SELECTOR?!");
     }
     return undefined;
@@ -302,7 +307,7 @@ export function convertRangeInfo(
     if (
       rangeInfo.endContainerChildTextNodeIndex >= endElement.childNodes.length
     ) {
-      if (IS_DEV) {
+      if (true) {
         console.log(
           "^^^ convertRangeInfo rangeInfo.endContainerChildTextNodeIndex >= endElement.childNodes.length?!"
         );
@@ -312,7 +317,7 @@ export function convertRangeInfo(
     endContainer =
       endElement.childNodes[rangeInfo.endContainerChildTextNodeIndex];
     if (endContainer.nodeType !== Node.TEXT_NODE) {
-      if (IS_DEV) {
+      if (true) {
         console.log(
           "^^^ convertRangeInfo endContainer.nodeType !== Node.TEXT_NODE?!"
         );

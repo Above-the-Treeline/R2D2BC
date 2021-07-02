@@ -244,7 +244,11 @@ export default class AnnotationModule implements ReaderModule {
         const chptHref: string = this.delegate.currentChapterLink.href;
         const positions = this.publication.positionsByHref(chptHref);
         const positionIndex = Math.ceil(progression * (positions.length - 1));
-        const locator = positions[positionIndex];
+        console.log("IDX", positionIndex);
+        // const locator = positions[positionIndex] ?? {
+        //   locations: { progression },
+        // };
+        const locator = { locations: { progression } };
 
         annotation = {
           ...locator,

@@ -358,9 +358,9 @@ export default class SearchModule implements ReaderModule {
     this.currentChapterSearchResult = [];
     this.currentHighlights = [];
     this.highlighter.destroyAllhighlights(this.delegate.iframe.contentDocument);
-    if (this.delegate.rights?.enableAnnotations) {
-      this.delegate.annotationModule.drawHighlights();
-    }
+    // if (this.delegate.rights?.enableAnnotations) {
+    //   this.delegate.annotationModule.drawHighlights();
+    // }
   }
   async search(term: any, current: boolean): Promise<any> {
     this.currentChapterSearchResult = [];
