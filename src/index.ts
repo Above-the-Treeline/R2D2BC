@@ -475,10 +475,16 @@ export async function load(config: ReaderConfig): Promise<any> {
             positions.push(locator);
             startPosition = startPosition + 1;
           } else {
+            const getByteLength = async (href: string): Promise<number> => {
+              if (config.api?.getContentByteLength) {
+                return config.api.getContentByteLength(href);
+              }
+              const r = await fetch(href);
+              const b = await r.blob();
+              return b.size;
+            };
             var href = publication.getAbsoluteHref(link.href);
-            const r = await fetch(href);
-            const b = await r.blob();
-            let length = b.size;
+            let length = await getByteLength(href);
             link.contentLength = length;
             totalContentLength += length;
             let positionLength = 1024;
@@ -528,6 +534,7 @@ export async function load(config: ReaderConfig): Promise<any> {
       });
       publication.positions = positions;
       if (IS_DEV) console.log(positions);
+      console.log(positions);
     } else {
       if (config.services?.positions) {
         await fetch(config.services?.positions.href)
