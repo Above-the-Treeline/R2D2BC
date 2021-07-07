@@ -264,7 +264,7 @@ export function convertRangeInfo(
     rangeInfo.startContainerElementCssSelector
   );
   if (!startElement) {
-    if (true) {
+    if (IS_DEV) {
       console.log("^^^ convertRangeInfo NO START ELEMENT CSS SELECTOR?!");
     }
     return undefined;
@@ -275,7 +275,7 @@ export function convertRangeInfo(
       rangeInfo.startContainerChildTextNodeIndex >=
       startElement.childNodes.length
     ) {
-      if (true) {
+      if (IS_DEV) {
         console.log(
           "^^^ convertRangeInfo rangeInfo.startContainerChildTextNodeIndex >= startElement.childNodes.length?!"
         );
@@ -285,7 +285,7 @@ export function convertRangeInfo(
     startContainer =
       startElement.childNodes[rangeInfo.startContainerChildTextNodeIndex];
     if (startContainer.nodeType !== Node.TEXT_NODE) {
-      if (true) {
+      if (IS_DEV) {
         console.log(
           "^^^ convertRangeInfo startContainer.nodeType !== Node.TEXT_NODE?!"
         );
@@ -297,7 +297,7 @@ export function convertRangeInfo(
     rangeInfo.endContainerElementCssSelector
   );
   if (!endElement) {
-    if (true) {
+    if (IS_DEV) {
       console.log("^^^ convertRangeInfo NO END ELEMENT CSS SELECTOR?!");
     }
     return undefined;
@@ -307,7 +307,7 @@ export function convertRangeInfo(
     if (
       rangeInfo.endContainerChildTextNodeIndex >= endElement.childNodes.length
     ) {
-      if (true) {
+      if (IS_DEV) {
         console.log(
           "^^^ convertRangeInfo rangeInfo.endContainerChildTextNodeIndex >= endElement.childNodes.length?!"
         );
@@ -317,7 +317,7 @@ export function convertRangeInfo(
     endContainer =
       endElement.childNodes[rangeInfo.endContainerChildTextNodeIndex];
     if (endContainer.nodeType !== Node.TEXT_NODE) {
-      if (true) {
+      if (IS_DEV) {
         console.log(
           "^^^ convertRangeInfo endContainer.nodeType !== Node.TEXT_NODE?!"
         );
