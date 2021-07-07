@@ -1379,6 +1379,7 @@ export default class IFrameNavigator implements Navigator {
   }
 
   private async handleIFrameLoad(): Promise<void> {
+    console.log("handleIframeLoad called");
     if (this.errorMessage) this.errorMessage.style.display = "none";
     this.showLoadingMessageAfterDelay();
     try {
@@ -1487,8 +1488,6 @@ export default class IFrameNavigator implements Navigator {
       if (this.annotator) {
         await this.saveCurrentReadingPosition();
       }
-      this.hideLoadingMessage();
-      this.showIframeContents();
 
       // Inject Readium CSS into Iframe Head
       const head = this.iframe.contentDocument.head;
@@ -1535,10 +1534,27 @@ export default class IFrameNavigator implements Navigator {
           }
         });
       }
+
+      // this.iframe.onload = () => {
+      //   console.log("all loaded in onload assigment...");
+      //   this.hideLoadingMessage();
+      //   this.showIframeContents();
+      // };
+
       if (this.highlighter !== undefined) {
         await this.highlighter.initialize();
       }
+
+      // Try just catching the other error...
       setTimeout(() => {
+        this.hideLoadingMessage();
+        this.showIframeContents();
+      }, 3000);
+
+      setTimeout(() => {
+        // this.hideLoadingMessage();
+        // this.showIframeContents();
+
         const body = this.iframe.contentDocument.body;
         if (this.rights?.enableTTS && this.tts?.enableSplitter) {
           Splitting({
@@ -1878,7 +1894,7 @@ export default class IFrameNavigator implements Navigator {
         }
       } else {
         if (isSameOrigin) {
-          this.handleSetIframeSrc(this.iframe, this.currentChapterLink.href);
+          this.iframe.src = this.currentChapterLink.href;
         } else {
           fetch(this.currentChapterLink.href)
             .then((r) => r.text())
@@ -1928,19 +1944,19 @@ export default class IFrameNavigator implements Navigator {
     }
   }
 
-  private handleSetIframeSrc(
-    iframe: HTMLIFrameElement,
-    href: string
-  ): Promise<boolean> {
-    iframe.src = href;
-    return new Promise((resolve) => {
-      // onload callback is called when all resources in the page have been fetched and resolved
-      iframe.onload = () => {
-        console.log("iframe loaded...");
-        resolve(true);
-      };
-    });
-  }
+  // private handleSetIframeSrc(
+  //   iframe: HTMLIFrameElement,
+  //   href: string
+  // ): Promise<boolean> {
+  //   iframe.src = href;
+  //   return new Promise((resolve) => {
+  //     // onload callback is called when all resources in the page have been fetched and resolved
+  //     iframe.onload = () => {
+  //       console.log("iframe loaded...");
+  //       resolve(true);
+  //     };
+  //   });
+  // }
 
   private static goBack() {
     window.history.back();
@@ -2597,7 +2613,7 @@ export default class IFrameNavigator implements Navigator {
     }
   }
 
-  navigate(locator: Locator): void {
+  async navigate(locator: Locator): Promise<void> {
     const exists = this.publication.getTOCItem(locator.href);
     if (exists) {
       var isCurrentLoaded = false;
