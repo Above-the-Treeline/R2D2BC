@@ -1485,21 +1485,17 @@ export default class IFrameNavigator implements Navigator {
           this.chapterTitle.innerHTML = "(Current Chapter)";
       }
 
-      this.injectInjectablesIntoIframeHead();
+      await this.injectInjectablesIntoIframeHead();
 
       if (this.annotator) {
         await this.saveCurrentReadingPosition();
       }
+      this.hideLoadingMessage();
+      this.showIframeContents();
 
       if (this.highlighter !== undefined) {
         await this.highlighter.initialize();
       }
-
-      setTimeout(() => {
-        // Give the stylesheet injectables time to load before rendering the content.
-        this.hideLoadingMessage();
-        this.showIframeContents();
-      }, 1000);
 
       setTimeout(() => {
         const body = this.iframe.contentDocument.body;
@@ -1568,9 +1564,22 @@ export default class IFrameNavigator implements Navigator {
     }
   }
 
-  private injectInjectablesIntoIframeHead() {
+  private async injectInjectablesIntoIframeHead(): Promise<void> {
     // Inject Readium CSS into Iframe Head
     const head = this.iframe.contentDocument.head;
+    const injectablesToLoad: Promise<boolean>[] = [];
+
+    const addLoadingInjectable = (
+      injectable: HTMLLinkElement | HTMLScriptElement
+    ) => {
+      const loadPromise = new Promise<boolean>((resolve) => {
+        injectable.onload = () => {
+          resolve(true);
+        };
+      });
+      injectablesToLoad.push(loadPromise);
+    };
+
     if (head) {
       head.insertBefore(
         IFrameNavigator.createBase(this.currentChapterLink.href),
@@ -1584,36 +1593,46 @@ export default class IFrameNavigator implements Navigator {
             // this.settings.setupEvents()
             this.settings.addFont(injectable.fontFamily);
             if (!injectable.systemFont) {
-              head.appendChild(IFrameNavigator.createCssLink(injectable.url));
+              const link = IFrameNavigator.createCssLink(injectable.url);
+              head.appendChild(link);
+              addLoadingInjectable(link);
             }
           } else if (injectable.r2before) {
-            head.insertBefore(
-              IFrameNavigator.createCssLink(injectable.url),
-              head.firstChild
-            );
+            const link = IFrameNavigator.createCssLink(injectable.url);
+            head.insertBefore(link, head.firstChild);
+            addLoadingInjectable(link);
           } else if (injectable.r2default) {
-            head.insertBefore(
-              IFrameNavigator.createCssLink(injectable.url),
-              head.childNodes[1]
-            );
+            const link = IFrameNavigator.createCssLink(injectable.url);
+            head.insertBefore(link, head.childNodes[1]);
+            addLoadingInjectable(link);
           } else if (injectable.r2after) {
             if (injectable.appearance) {
               this.settings.addAppearance(injectable.appearance);
             }
-            head.appendChild(IFrameNavigator.createCssLink(injectable.url));
+            const link = IFrameNavigator.createCssLink(injectable.url);
+            head.appendChild(link);
+            addLoadingInjectable(link);
           } else {
-            head.appendChild(IFrameNavigator.createCssLink(injectable.url));
+            const link = IFrameNavigator.createCssLink(injectable.url);
+            head.appendChild(link);
+            addLoadingInjectable(link);
           }
         } else if (injectable.type === "script") {
-          head.appendChild(
-            IFrameNavigator.createJavascriptLink(
-              injectable.url,
-              injectable.async
-            )
+          const script = IFrameNavigator.createJavascriptLink(
+            injectable.url,
+            injectable.async
           );
+          head.appendChild(script);
+          addLoadingInjectable(script);
         }
       });
     }
+
+    if (injectablesToLoad.length === 0) {
+      return;
+    }
+
+    await Promise.all(injectablesToLoad);
   }
 
   private abortOnError() {
