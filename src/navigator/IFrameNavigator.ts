@@ -1485,76 +1485,23 @@ export default class IFrameNavigator implements Navigator {
           this.chapterTitle.innerHTML = "(Current Chapter)";
       }
 
+      this.injectInjectablesIntoIframeHead();
+
       if (this.annotator) {
         await this.saveCurrentReadingPosition();
       }
-
-      // Inject Readium CSS into Iframe Head
-      const head = this.iframe.contentDocument.head;
-      if (head) {
-        head.insertBefore(
-          IFrameNavigator.createBase(this.currentChapterLink.href),
-          head.firstChild
-        );
-
-        this.injectables.forEach((injectable) => {
-          if (injectable.type === "style") {
-            if (injectable.fontFamily) {
-              // UserSettings.fontFamilyValues.push(injectable.fontFamily)
-              // this.settings.setupEvents()
-              this.settings.addFont(injectable.fontFamily);
-              if (!injectable.systemFont) {
-                head.appendChild(IFrameNavigator.createCssLink(injectable.url));
-              }
-            } else if (injectable.r2before) {
-              head.insertBefore(
-                IFrameNavigator.createCssLink(injectable.url),
-                head.firstChild
-              );
-            } else if (injectable.r2default) {
-              head.insertBefore(
-                IFrameNavigator.createCssLink(injectable.url),
-                head.childNodes[1]
-              );
-            } else if (injectable.r2after) {
-              if (injectable.appearance) {
-                this.settings.addAppearance(injectable.appearance);
-              }
-              head.appendChild(IFrameNavigator.createCssLink(injectable.url));
-            } else {
-              head.appendChild(IFrameNavigator.createCssLink(injectable.url));
-            }
-          } else if (injectable.type === "script") {
-            head.appendChild(
-              IFrameNavigator.createJavascriptLink(
-                injectable.url,
-                injectable.async
-              )
-            );
-          }
-        });
-      }
-
-      // this.iframe.onload = () => {
-      //   console.log("all loaded in onload assigment...");
-      //   this.hideLoadingMessage();
-      //   this.showIframeContents();
-      // };
 
       if (this.highlighter !== undefined) {
         await this.highlighter.initialize();
       }
 
-      // Try just catching the other error...
       setTimeout(() => {
+        // Give the stylesheet injectables time to load before rendering the content.
         this.hideLoadingMessage();
         this.showIframeContents();
-      }, 3000);
+      }, 1000);
 
       setTimeout(() => {
-        // this.hideLoadingMessage();
-        // this.showIframeContents();
-
         const body = this.iframe.contentDocument.body;
         if (this.rights?.enableTTS && this.tts?.enableSplitter) {
           Splitting({
@@ -1618,6 +1565,54 @@ export default class IFrameNavigator implements Navigator {
       console.error(err);
       this.abortOnError();
       return new Promise<void>((_, reject) => reject(err)).catch(() => {});
+    }
+  }
+
+  private injectInjectablesIntoIframeHead() {
+    // Inject Readium CSS into Iframe Head
+    const head = this.iframe.contentDocument.head;
+    if (head) {
+      head.insertBefore(
+        IFrameNavigator.createBase(this.currentChapterLink.href),
+        head.firstChild
+      );
+
+      this.injectables.forEach((injectable) => {
+        if (injectable.type === "style") {
+          if (injectable.fontFamily) {
+            // UserSettings.fontFamilyValues.push(injectable.fontFamily)
+            // this.settings.setupEvents()
+            this.settings.addFont(injectable.fontFamily);
+            if (!injectable.systemFont) {
+              head.appendChild(IFrameNavigator.createCssLink(injectable.url));
+            }
+          } else if (injectable.r2before) {
+            head.insertBefore(
+              IFrameNavigator.createCssLink(injectable.url),
+              head.firstChild
+            );
+          } else if (injectable.r2default) {
+            head.insertBefore(
+              IFrameNavigator.createCssLink(injectable.url),
+              head.childNodes[1]
+            );
+          } else if (injectable.r2after) {
+            if (injectable.appearance) {
+              this.settings.addAppearance(injectable.appearance);
+            }
+            head.appendChild(IFrameNavigator.createCssLink(injectable.url));
+          } else {
+            head.appendChild(IFrameNavigator.createCssLink(injectable.url));
+          }
+        } else if (injectable.type === "script") {
+          head.appendChild(
+            IFrameNavigator.createJavascriptLink(
+              injectable.url,
+              injectable.async
+            )
+          );
+        }
+      });
     }
   }
 
@@ -1943,20 +1938,6 @@ export default class IFrameNavigator implements Navigator {
       }, 400);
     }
   }
-
-  // private handleSetIframeSrc(
-  //   iframe: HTMLIFrameElement,
-  //   href: string
-  // ): Promise<boolean> {
-  //   iframe.src = href;
-  //   return new Promise((resolve) => {
-  //     // onload callback is called when all resources in the page have been fetched and resolved
-  //     iframe.onload = () => {
-  //       console.log("iframe loaded...");
-  //       resolve(true);
-  //     };
-  //   });
-  // }
 
   private static goBack() {
     window.history.back();
