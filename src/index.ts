@@ -47,10 +47,8 @@ var SearchModuleInstance: SearchModule;
 var ContentProtectionModuleInstance: ContentProtectionModule;
 var TimelineModuleInstance: TimelineModule;
 
-// export const IS_DEV =
-//   process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev";
-
-export const IS_DEV = false;
+export const IS_DEV =
+  process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev";
 
 export async function unload() {
   if (IS_DEV) {
