@@ -1411,7 +1411,7 @@ export default class IFrameNavigator implements Navigator {
           title: startLink.Title,
         };
 
-        this.navigate(position);
+        await this.navigate(position);
       }
 
       return new Promise<void>((resolve) => resolve());
@@ -1729,7 +1729,7 @@ export default class IFrameNavigator implements Navigator {
     this.precessContentForIframe();
   }
 
-  private precessContentForIframe() {
+  private async precessContentForIframe(): Promise<void> {
     const self = this;
     var index = this.publication.getSpineIndex(this.currentChapterLink.href);
     var even: boolean = index % 2 === 1;
@@ -2088,7 +2088,11 @@ export default class IFrameNavigator implements Navigator {
           href: this.currentChapterLink.href,
         };
         if (isSameOrigin) {
+          console.log("SETTING IFRAME SRC, BRO");
           this.iframes[0].src = this.currentChapterLink.href;
+          return new Promise<void>(resolve => {
+            this.iframes[0].onload = () => resolve();
+          });
         } else {
           fetch(this.currentChapterLink.href)
             .then((r) => r.text())
@@ -2923,7 +2927,7 @@ export default class IFrameNavigator implements Navigator {
     }
   }
 
-  navigate(locator: Locator): void {
+  async navigate(locator: Locator): Promise<void> {
     const exists = this.publication.getTOCItem(locator.href);
     if (exists) {
       var isCurrentLoaded = false;
@@ -3107,7 +3111,7 @@ export default class IFrameNavigator implements Navigator {
         this.newPosition = locator;
         this.currentTOCRawLink = locator.href;
 
-        this.precessContentForIframe();
+        await this.precessContentForIframe();
 
         if (locator.locations.fragment === undefined) {
           this.currentTocUrl = null;
@@ -3199,7 +3203,7 @@ export default class IFrameNavigator implements Navigator {
           created: new Date(),
           title: startLink.Title,
         };
-        this.navigate(position);
+        await this.navigate(position);
       }
     }
   }
