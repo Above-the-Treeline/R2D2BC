@@ -46,7 +46,7 @@ export default class ReflowableBookView implements BookView {
     }
   }
 
-  setMode(scroll: boolean) {
+  setMode(scroll: boolean, force: boolean = true) {
     // this.iframe.height = "0";
     // this.iframe.width = "0";
 
@@ -97,7 +97,9 @@ export default class ReflowableBookView implements BookView {
       ) as any;
       html.style.setProperty("--USER__scroll", "readium-scroll-off");
       this.setSize();
-      this.setIframeHeight(this.iframe);
+      if (force) {
+        this.setIframeHeight(this.iframe);
+      }
     }
     if (this.delegate.rights?.enableContentProtection) {
       this.delegate.contentProtectionModule.recalculate();
@@ -393,7 +395,10 @@ export default class ReflowableBookView implements BookView {
       return 0;
     } else {
       const width = this.getColumnWidth();
-      return this.iframe.contentDocument.scrollingElement.scrollWidth / width;
+      const scrollWidth = this.iframe.contentDocument.scrollingElement.scrollWidth;
+      console.log("scroll width =>", scrollWidth); 
+      console.log("column width =>", width);
+      return scrollWidth / width;
     }
   }
 
@@ -486,7 +491,8 @@ export default class ReflowableBookView implements BookView {
         this.iframe.contentDocument,
         "body"
       ) as any;
-
+      
+      this.iframe.height = "0";
       (this.iframe.contentDocument as any).documentElement.style.height =
         this.height + "px";
       this.iframe.height = this.height + "px";

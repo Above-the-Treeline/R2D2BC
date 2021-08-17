@@ -670,7 +670,7 @@ export class UserSettings implements IUserSettings {
       // }
 
       this.isScrollMode().then((scroll) => {
-        this.view.setMode(scroll);
+        this.view.setMode(scroll, false);
       });
     }
   }
@@ -1072,7 +1072,7 @@ export class UserSettings implements IUserSettings {
       );
       
       setTimeout(async () => {
-        this.view.setMode(this.verticalScroll);
+        this.view.setMode(this.verticalScroll, true);
         this.view.goToPosition(position);
         this.viewChangeCallback();
       }, 10);
@@ -1112,7 +1112,7 @@ export class UserSettings implements IUserSettings {
     // if (this.material?.settings.scroll) {
     //   this.updateViewButtons();
     // }
-    this.view.setMode(this.verticalScroll);
+    this.view.setMode(this.verticalScroll, true);
     this.view.goToPosition(position);
     this.viewChangeCallback();
   }
