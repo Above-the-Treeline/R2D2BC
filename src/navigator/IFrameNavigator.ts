@@ -1628,15 +1628,12 @@ export default class IFrameNavigator implements Navigator {
         }
       }, 100);
 
-      const resizeTimeout = this.publication.positions.length * 2 + 100;
-      console.log("timeout", resizeTimeout);
-
       setTimeout(() => {
-        console.log("Final resize...");
+        console.log("Final resize with 500ms timeout...");
         this.handleResize();
         this.hideLoadingMessage();
         this.showIframeContents();
-      }, resizeTimeout); 
+      }, 500); 
 
       return new Promise<void>((resolve) => resolve());
     } catch (err) {
