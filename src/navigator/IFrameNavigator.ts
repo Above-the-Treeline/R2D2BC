@@ -1423,6 +1423,7 @@ export default class IFrameNavigator implements Navigator {
   }
 
   private async handleIFrameLoad(): Promise<void> {
+    console.log("Iframe onload fires...");
     if (this.errorMessage) this.errorMessage.style.display = "none";
     this.showLoadingMessageAfterDelay();
     try {
@@ -1430,10 +1431,10 @@ export default class IFrameNavigator implements Navigator {
       if (this.newPosition) {
         bookViewPosition = this.newPosition.locations.progression;
       }
+      await this.settings.applyProperties();
+ 
       this.handleResize();
       this.updateBookView();
-
-      this.settings.applyProperties();
 
       setTimeout(() => {
         this.view.goToPosition(bookViewPosition);
@@ -1550,8 +1551,6 @@ export default class IFrameNavigator implements Navigator {
       if (this.annotator) {
         await this.saveCurrentReadingPosition();
       }
-      this.hideLoadingMessage();
-      this.showIframeContents();
 
       if (this.highlighter !== undefined) {
         await this.highlighter.initialize();
@@ -1628,6 +1627,13 @@ export default class IFrameNavigator implements Navigator {
           await this.mediaOverlayModule.initialize();
         }
       }, 100);
+
+      setTimeout(() => {
+        console.log("Final resize with 750ms timeout...");
+        this.handleResize();
+        this.hideLoadingMessage();
+        this.showIframeContents();
+      }, 750); 
 
       return new Promise<void>((resolve) => resolve());
     } catch (err) {

@@ -32,7 +32,7 @@ interface BookView {
   delegate: IFrameNavigator;
   attributes: IFrameAttributes;
 
-  setMode?(scroll: boolean);
+  setMode?(scroll: boolean, force: boolean);
   isScrollMode?();
   isPaginated?();
   goToElement?(element: HTMLElement | null, relative?: boolean): void;
