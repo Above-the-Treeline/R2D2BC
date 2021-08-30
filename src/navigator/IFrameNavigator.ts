@@ -1507,6 +1507,9 @@ export default class IFrameNavigator implements Navigator {
       }
       if (!this.currentChapterLink.title && tocItem !== null && tocItem.Title) {
         this.currentChapterLink.title = tocItem.Title;
+      } else if (!this.currentChapterLink.title) {
+        const linkTitle = this.publication.getTOCItemAbsolute(currentLocation)?.Title ?? "";
+        this.currentChapterLink.title = linkTitle;
       }
       if (
         !this.currentChapterLink.type &&
@@ -2868,7 +2871,7 @@ export default class IFrameNavigator implements Navigator {
           type: this.nextChapterLink.type,
           title: this.nextChapterLink.title,
         };
-        
+
         this.stopReadAloud(true);
         this.navigate(position);
       }
