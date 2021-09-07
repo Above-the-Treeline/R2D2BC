@@ -119,6 +119,8 @@ export interface IFrameNavigatorConfig {
 export interface PublicationServices {
   positions?: URL;
   weight?: URL;
+  getPositions: () => Promise<Locator[]>;
+  getWeights: () => Promise<{ [href: string]: number }>;
 }
 export interface Injectable {
   type: string;

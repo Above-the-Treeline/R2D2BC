@@ -683,14 +683,27 @@ export async function load(config: ReaderConfig): Promise<any> {
     publication.positions = positions;
     if (IS_DEV) console.log(positions);
   } else {
-    if (config.services?.positions) {
+    if (config.services?.getPositions) {
+      const positions = await config.services.getPositions();
+      publication.positions = positions;
+    } else if (config.services?.positions) {
       await fetch(config.services?.positions.href)
         .then((r) => r.text())
         .then(async (content) => {
           publication.positions = JSON.parse(content).positions;
         });
     }
-    if (config.services?.weight) {
+    
+    if (config.services?.getWeights) {
+      if (
+        (publication.Metadata.Rendition?.Layout ?? "unknown") !== "fixed"
+      ) {
+        const weightsByHref = await config.services.getWeights();
+        publication.readingOrder.forEach(link => {
+          (link as Link).contentWeight = weightsByHref[link.Href];
+        });
+      }
+    } else if (config.services?.weight) {
       await fetch(config.services?.weight.href)
         .then((r) => r.text())
         .then(async (content) => {
