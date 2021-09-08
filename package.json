@@ -13,6 +13,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
+    "postinstall": "npm run build-lib",
     "build-lib": "tsc && node-sass src/styles/sass/ -o lib/ && npm run copy-build-files && npm run copy-splitting-module",
     "copy-build-files": "node scripts/copyBuildFiles.js",
     "copy-splitting-module": "node scripts/copySplittingModule.js",
