@@ -75,6 +75,8 @@ export default class ContentProtectionModule implements ReaderModule {
   private isHacked: boolean = false;
   private securityContainer: HTMLDivElement;
   private mutationObserver: MutationObserver;
+  private charactersDescrambled: number = 0;
+  private readonly maximumViewableCharactersPerScreen: number = 3000
 
   public static async setupPreloadProtection(
     config: ContentProtectionModuleConfig
@@ -379,12 +381,23 @@ export default class ContentProtectionModule implements ReaderModule {
           "body"
         ) as HTMLBodyElement;
         this.rects = this.findRects(body);
-        this.rects.forEach((rect) =>
-          this.toggleRect(rect, this.securityContainer, this.isHacked)
-        );
+        this.toggleAllRects();
       }
     }
   }
+
+  private toggleAllRects() {
+    this.charactersDescrambled = 0;
+    var maximumViewableCharactersPerScreenExceeded = false;
+    this.rects.forEach((rect) => {
+      if (this.charactersDescrambled > this.maximumViewableCharactersPerScreen && !maximumViewableCharactersPerScreenExceeded) {
+        maximumViewableCharactersPerScreenExceeded = true;
+        alert("You have exceeded the maximum allowable amount of text viewable on the screen.")
+      }
+      this.toggleRect(rect, this.securityContainer, this.isHacked)
+    });
+  }
+
   private setupEvents(): void {
     if (this.properties?.disableKeys) {
       addEventListenerOptional(
@@ -649,9 +662,7 @@ export default class ContentProtectionModule implements ReaderModule {
 
           setTimeout(() => {
             this.rects = this.findRects(body);
-            this.rects.forEach((rect) =>
-              this.toggleRect(rect, this.securityContainer, this.isHacked)
-            );
+            this.toggleAllRects();
 
             this.setupEvents();
             if (!this.hasEventListener) {
@@ -670,18 +681,14 @@ export default class ContentProtectionModule implements ReaderModule {
   }
 
   handleScroll() {
-    this.rects.forEach((rect) =>
-      this.toggleRect(rect, this.securityContainer, this.isHacked)
-    );
+    this.toggleAllRects();
   }
   handleResize() {
     if (this.properties?.enableObfuscation) {
       const onDoResize = debounce(() => {
         this.calcRects(this.rects);
         if (this.rects !== undefined) {
-          this.rects.forEach((rect) =>
-            this.toggleRect(rect, this.securityContainer, this.isHacked)
-          );
+          this.toggleAllRects();
         }
       }, 10);
       if (this.rects) {
@@ -828,9 +835,7 @@ export default class ContentProtectionModule implements ReaderModule {
       const onDoResize = debounce(() => {
         this.calcRects(this.rects);
         if (this.rects !== undefined) {
-          this.rects.forEach((rect) =>
-            this.toggleRect(rect, this.securityContainer, this.isHacked)
-          );
+          this.toggleAllRects();
         }
       }, delay);
       if (this.rects) {
@@ -887,12 +892,21 @@ export default class ContentProtectionModule implements ReaderModule {
     const outsideViewport = this.isOutsideViewport(rect);
     const beingHacked = this.isBeingHacked(securityContainer);
 
-    if (rect.isObfuscated && !outsideViewport && !beingHacked && !isHacked) {
+    // Descramble the text if the following conditions are met.
+    if (rect.isObfuscated && !outsideViewport
+                          && !beingHacked
+                          && !isHacked
+                          && this.charactersDescrambled <= this.maximumViewableCharactersPerScreen) {
+      this.charactersDescrambled += rect.node.textContent.length;
       rect.node.textContent = rect.textContent;
       rect.isObfuscated = false;
     }
 
-    if (!rect.isObfuscated && (outsideViewport || beingHacked || isHacked)) {
+    // Scramble the text if the following conditions are met.
+    if (!rect.isObfuscated && (outsideViewport
+                           || beingHacked
+                           || isHacked
+                           || this.charactersDescrambled > this.maximumViewableCharactersPerScreen)) {
       rect.node.textContent = rect.scrambledTextContent;
       rect.isObfuscated = true;
     }
