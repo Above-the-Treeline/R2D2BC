@@ -76,7 +76,7 @@ export default class ContentProtectionModule implements ReaderModule {
   private securityContainer: HTMLDivElement;
   private mutationObserver: MutationObserver;
   private charactersDescrambled: number = 0;
-  private readonly maximumViewableCharactersPerScreen: number = 3000
+  private readonly maximumViewableCharactersPerScreen: number = 5000;
 
   public static async setupPreloadProtection(
     config: ContentProtectionModuleConfig
@@ -392,10 +392,18 @@ export default class ContentProtectionModule implements ReaderModule {
     this.rects.forEach((rect) => {
       if (this.charactersDescrambled > this.maximumViewableCharactersPerScreen && !maximumViewableCharactersPerScreenExceeded) {
         maximumViewableCharactersPerScreenExceeded = true;
-        alert("You have exceeded the maximum allowable amount of text viewable on the screen.")
+        console.log("You have exceeded the maximum allowable amount of text viewable on the screen. Characters descrambled: " + this.charactersDescrambled);
+        // alert("You have exceeded the maximum allowable amount of text viewable on the screen.")
       }
-      this.toggleRect(rect, this.securityContainer, this.isHacked)
+      this.toggleRect(rect, this.securityContainer, this.isHacked);
+      if (!rect.isObfuscated) {
+        this.charactersDescrambled += rect.node.textContent.length;
+        console.log("Descrambled: " + rect.node.textContent);
+      }
     });
+    if (!maximumViewableCharactersPerScreenExceeded) {
+      console.log("Maximum allowable amount of text viewable on the screen NOT exceeded. Characters descrambled: " + this.charactersDescrambled);
+    }
   }
 
   private setupEvents(): void {
@@ -897,7 +905,6 @@ export default class ContentProtectionModule implements ReaderModule {
                           && !beingHacked
                           && !isHacked
                           && this.charactersDescrambled <= this.maximumViewableCharactersPerScreen) {
-      this.charactersDescrambled += rect.node.textContent.length;
       rect.node.textContent = rect.textContent;
       rect.isObfuscated = false;
     }
@@ -981,15 +988,17 @@ export default class ContentProtectionModule implements ReaderModule {
     const isAbove = bottom < windowTop;
     const isBelow = rect.top > windowBottom;
 
-    // Consider left boundary to be one full screen width left of the leftmost
-    // edge of the viewing area. This is so text originating on the previous
-    // screen does not flow onto the current screen scrambled.
-    const isLeft = right < (windowLeft - window.innerWidth);
-
-    // Consider right boundary to be one full screen width right of the rightmost
-    // edge of the viewing area. This is so quickly paging through the book
-    // does not result in visible page descrambling.
-    const isRight = rect.left > (windowRight + window.innerWidth);
+    // // Consider left boundary to be one full screen width left of the leftmost
+    // // edge of the viewing area. This is so text originating on the previous
+    // // screen does not flow onto the current screen scrambled.
+    // const isLeft = right < (windowLeft - window.innerWidth);
+    const isLeft = right < (windowLeft);
+    //
+    // // Consider right boundary to be one full screen width right of the rightmost
+    // // edge of the viewing area. This is so quickly paging through the book
+    // // does not result in visible page descrambling.
+    // const isRight = rect.left > (windowRight + window.innerWidth);
+    const isRight = rect.left > (windowRight);
 
     return isAbove || isBelow || isLeft || isRight;
   }
