@@ -27,7 +27,7 @@ import {
 import { debounce } from "debounce";
 import { IS_DEV } from "../..";
 import { delay } from "../../utils";
-import { addListener, launch } from "devtools-detector";
+import { DevtoolsDetector, checkers } from "devtools-detector";
 import { getUserAgentRegExp } from "browserslist-useragent-regexp";
 
 export interface ContentProtectionModuleProperties {
@@ -119,8 +119,17 @@ export default class ContentProtectionModule implements ReaderModule {
         config.api.inspectDetected();
       }
     };
-    addListener(onInspectorOpened);
-    launch();
+    const detector = new DevtoolsDetector({
+      checkers: [
+        checkers.elementIdChecker,
+        checkers.regToStringChecker,
+        checkers.functionToStringChecker,
+        checkers.depRegToStringChecker,
+        checkers.dateToStringChecker,
+      ],
+    })
+    detector.addListener(onInspectorOpened);
+    detector.launch();
     await delay(config.detectInspectInitDelay ?? 50);
   }
 
