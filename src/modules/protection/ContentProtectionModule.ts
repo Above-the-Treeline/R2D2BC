@@ -80,7 +80,7 @@ export default class ContentProtectionModule implements ReaderModule {
     config: ContentProtectionModuleConfig
   ): Promise<void> {
     if (this.isCurrentBrowserSupported(config)) {
-      if (config.detectInspect) {
+      if (false) {
         await this.startInspectorProtection(config);
       }
     } else {
@@ -886,6 +886,10 @@ export default class ContentProtectionModule implements ReaderModule {
   ): void {
     const outsideViewport = this.isOutsideViewport(rect);
     const beingHacked = this.isBeingHacked(securityContainer);
+
+    console.log("latest===");
+    console.log("isOutsideViewport", outsideViewport);
+    console.log("isObfuscated: ", rect.isObfuscated);
 
     if (rect.isObfuscated && !outsideViewport && !beingHacked && !isHacked) {
       rect.node.textContent = rect.textContent;
