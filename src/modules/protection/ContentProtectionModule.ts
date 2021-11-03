@@ -75,12 +75,14 @@ export default class ContentProtectionModule implements ReaderModule {
   private isHacked: boolean = false;
   private securityContainer: HTMLDivElement;
   private mutationObserver: MutationObserver;
+  private charactersDescrambled: number = 0;
+  private readonly maxViewableCharactersPerScreen: number = 1000;
 
   public static async setupPreloadProtection(
     config: ContentProtectionModuleConfig
   ): Promise<void> {
     if (this.isCurrentBrowserSupported(config)) {
-      if (config.detectInspect) {
+      if (false) {
         await this.startInspectorProtection(config);
       }
     } else {
@@ -388,12 +390,19 @@ export default class ContentProtectionModule implements ReaderModule {
           "body"
         ) as HTMLBodyElement;
         this.rects = this.findRects(body);
-        this.rects.forEach((rect) =>
-          this.toggleRect(rect, this.securityContainer, this.isHacked)
-        );
+        this.toggleAllRects();
       }
     }
   }
+
+  private toggleAllRects() {
+    this.charactersDescrambled = 0;
+    this.rects.forEach((rect) => {
+      this.toggleRect(rect, this.securityContainer, this.isHacked)
+    });
+    console.log('Total descrambled = ', this.charactersDescrambled);
+  }
+
   private setupEvents(): void {
     if (this.properties?.disableKeys) {
       addEventListenerOptional(
@@ -658,9 +667,7 @@ export default class ContentProtectionModule implements ReaderModule {
 
           setTimeout(() => {
             this.rects = this.findRects(body);
-            this.rects.forEach((rect) =>
-              this.toggleRect(rect, this.securityContainer, this.isHacked)
-            );
+            this.toggleAllRects();
 
             this.setupEvents();
             if (!this.hasEventListener) {
@@ -679,18 +686,14 @@ export default class ContentProtectionModule implements ReaderModule {
   }
 
   handleScroll() {
-    this.rects.forEach((rect) =>
-      this.toggleRect(rect, this.securityContainer, this.isHacked)
-    );
+    this.toggleAllRects();
   }
   handleResize() {
     if (this.properties?.enableObfuscation) {
       const onDoResize = debounce(() => {
         this.calcRects(this.rects);
         if (this.rects !== undefined) {
-          this.rects.forEach((rect) =>
-            this.toggleRect(rect, this.securityContainer, this.isHacked)
-          );
+          this.toggleAllRects();
         }
       }, 10);
       if (this.rects) {
@@ -837,9 +840,7 @@ export default class ContentProtectionModule implements ReaderModule {
       const onDoResize = debounce(() => {
         this.calcRects(this.rects);
         if (this.rects !== undefined) {
-          this.rects.forEach((rect) =>
-            this.toggleRect(rect, this.securityContainer, this.isHacked)
-          );
+          this.toggleAllRects();
         }
       }, delay);
       if (this.rects) {
@@ -895,13 +896,18 @@ export default class ContentProtectionModule implements ReaderModule {
   ): void {
     const outsideViewport = this.isOutsideViewport(rect);
     const beingHacked = this.isBeingHacked(securityContainer);
+    const doAllowDescramble = this.charactersDescrambled < this.maxViewableCharactersPerScreen;
 
-    if (rect.isObfuscated && !outsideViewport && !beingHacked && !isHacked) {
+    console.log("isOutsideViewport", outsideViewport);
+    console.log("isObfuscated: ", rect.isObfuscated);
+
+    if (doAllowDescramble && rect.isObfuscated && !outsideViewport && !beingHacked && !isHacked) {
       rect.node.textContent = rect.textContent;
       rect.isObfuscated = false;
+      this.charactersDescrambled += rect.textContent.length;
     }
 
-    if (!rect.isObfuscated && (outsideViewport || beingHacked || isHacked)) {
+    if (!doAllowDescramble && !rect.isObfuscated && (outsideViewport || beingHacked || isHacked)) {
       rect.node.textContent = rect.scrambledTextContent;
       rect.isObfuscated = true;
     }
