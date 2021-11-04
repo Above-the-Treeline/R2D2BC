@@ -44,6 +44,7 @@ export interface ContentProtectionModuleProperties {
   hideTargetUrl: boolean;
   disableDrag: boolean;
   supportedBrowsers: [];
+  maxPercentageOfViewableContentNodes?: number;
 }
 
 export interface ContentProtectionModuleConfig
@@ -75,8 +76,7 @@ export default class ContentProtectionModule implements ReaderModule {
   private isHacked: boolean = false;
   private securityContainer: HTMLDivElement;
   private mutationObserver: MutationObserver;
-  private charactersDescrambled: number = 0;
-  private readonly maxViewableCharactersPerScreen: number = 1000;
+  private totalRectsDescrambled: number = 0;
 
   public static async setupPreloadProtection(
     config: ContentProtectionModuleConfig
@@ -396,11 +396,10 @@ export default class ContentProtectionModule implements ReaderModule {
   }
 
   private toggleAllRects() {
-    this.charactersDescrambled = 0;
+    this.totalRectsDescrambled = 0;
     this.rects.forEach((rect) => {
       this.toggleRect(rect, this.securityContainer, this.isHacked)
     });
-    console.log('Total descrambled = ', this.charactersDescrambled);
   }
 
   private setupEvents(): void {
@@ -752,22 +751,30 @@ export default class ContentProtectionModule implements ReaderModule {
     if (IS_DEV) {
       console.log("before print");
     }
-    this.delegate.headerMenu.style.display = "none";
-    this.delegate.mainElement.style.display = "none";
+
+    this.obfuscateAllRects();
+
+    if (this.delegate && this.delegate.headerMenu) { 
+      this.delegate.headerMenu.style.display = "none";
+      this.delegate.mainElement.style.display = "none";
+    }
 
     event.stopPropagation();
     event.preventDefault();
     return false;
   }
-  afterPrint(event: {
+  async afterPrint(event: {
     preventDefault: () => void;
     stopPropagation: () => void;
   }) {
     if (IS_DEV) {
-      console.log("before print");
+      console.log("after print");
     }
-    this.delegate.headerMenu.style.removeProperty("display");
-    this.delegate.mainElement.style.removeProperty("display");
+
+    if (this.delegate && this.delegate.headerMenu) {
+      this.delegate.headerMenu.style.removeProperty("display");
+      this.delegate.mainElement.style.removeProperty("display");
+    }
 
     event.stopPropagation();
     event.preventDefault();
@@ -896,20 +903,49 @@ export default class ContentProtectionModule implements ReaderModule {
   ): void {
     const outsideViewport = this.isOutsideViewport(rect);
     const beingHacked = this.isBeingHacked(securityContainer);
-    const doAllowDescramble = this.charactersDescrambled < this.maxViewableCharactersPerScreen;
 
-    console.log("isOutsideViewport", outsideViewport);
-    console.log("isObfuscated: ", rect.isObfuscated);
-
-    if (doAllowDescramble && rect.isObfuscated && !outsideViewport && !beingHacked && !isHacked) {
-      rect.node.textContent = rect.textContent;
-      rect.isObfuscated = false;
-      this.charactersDescrambled += rect.textContent.length;
+    if (!this.doAllowDescramble()) {
+      return this.obfuscate(rect);
     }
 
-    if (!doAllowDescramble && !rect.isObfuscated && (outsideViewport || beingHacked || isHacked)) {
-      rect.node.textContent = rect.scrambledTextContent;
-      rect.isObfuscated = true;
+    if (rect.isObfuscated && !outsideViewport && !beingHacked && !isHacked) {
+      rect.node.textContent = rect.textContent;
+      rect.isObfuscated = false;
+    }
+
+    if (!rect.isObfuscated && (outsideViewport || beingHacked || isHacked)) {
+      this.obfuscate(rect);
+    }
+
+    if (!rect.isObfuscated) {
+      this.totalRectsDescrambled += 1;
+    }
+  }
+
+  private obfuscate(rect: ContentProtectionRect): void {
+    rect.node.textContent = rect.scrambledTextContent;
+    rect.isObfuscated = true;
+  }
+
+  private doAllowDescramble(): boolean {
+    if (typeof this.properties.maxPercentageOfViewableContentNodes !== "number") {
+      return true;
+    }
+    const totalRectsCount: number = this.rects.length; 
+    const descrambledPercentage: number = (this.totalRectsDescrambled / totalRectsCount) * 100;
+    return descrambledPercentage < this.properties.maxPercentageOfViewableContentNodes;
+  }
+
+  private obfuscateAllRects() {
+    for (const iframe of this.delegate.iframes) {
+      const body = HTMLUtilities.findRequiredIframeElement(
+        iframe.contentDocument,
+        "body"
+      ) as HTMLBodyElement;
+      this.rects = this.findRects(body);
+      this.rects.forEach((rect) => {
+        this.obfuscate(rect);
+      });
     }
   }
 
