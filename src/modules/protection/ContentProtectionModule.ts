@@ -44,7 +44,7 @@ export interface ContentProtectionModuleProperties {
   hideTargetUrl: boolean;
   disableDrag: boolean;
   supportedBrowsers: [];
-  maxPercentageOfViewableContentNodes?: number;
+  maxPercentageOfViewableContent?: number;
 }
 
 export interface ContentProtectionModuleConfig
@@ -55,6 +55,7 @@ export interface ContentProtectionModuleConfig
 
 export interface ContentProtectionModuleAPI {
   inspectDetected: () => void;
+  onBeforePrint: (obfuscateAllContent: () => void) => void;
 }
 
 interface ContentProtectionRect {
@@ -70,13 +71,13 @@ interface ContentProtectionRect {
 
 export default class ContentProtectionModule implements ReaderModule {
   private rects: Array<ContentProtectionRect>;
+  private configApi: ContentProtectionModuleAPI;
   private delegate: IFrameNavigator;
   private properties: ContentProtectionModuleProperties;
   private hasEventListener: boolean = false;
   private isHacked: boolean = false;
   private securityContainer: HTMLDivElement;
   private mutationObserver: MutationObserver;
-  private totalRectsDescrambled: number = 0;
 
   public static async setupPreloadProtection(
     config: ContentProtectionModuleConfig
@@ -93,6 +94,7 @@ export default class ContentProtectionModule implements ReaderModule {
   public static async create(config: ContentProtectionModuleConfig) {
     const security = new this(
       config.delegate,
+      config.api,
       config as ContentProtectionModuleProperties
     );
     await security.start();
@@ -101,8 +103,10 @@ export default class ContentProtectionModule implements ReaderModule {
 
   public constructor(
     delegate: IFrameNavigator,
+    api: ContentProtectionModuleAPI | null = null,
     properties: ContentProtectionModuleProperties | null = null
   ) {
+    this.configApi = api;
     this.delegate = delegate;
     this.properties = properties;
   }
@@ -396,10 +400,27 @@ export default class ContentProtectionModule implements ReaderModule {
   }
 
   private toggleAllRects() {
-    this.totalRectsDescrambled = 0;
-    this.rects.forEach((rect) => {
-      this.toggleRect(rect, this.securityContainer, this.isHacked)
-    });
+    const totalContentLengthAvailable: number = this.countTotalAmountOfChars(this.rects);
+    const contentPercentageVisible = this.getPercentContentInViewport(this.rects, totalContentLengthAvailable);
+    console.log("content percent visible: ", contentPercentageVisible);
+    if ((totalContentLengthAvailable > 10000) && (contentPercentageVisible > this.properties.maxPercentageOfViewableContent)) {
+      this.obfuscateAllRects();
+    } else {
+      this.rects.forEach((rect) => {
+        this.toggleRect(rect, this.securityContainer, this.isHacked)
+      });
+    }
+  }
+
+  private countTotalAmountOfChars(rects: ContentProtectionRect[]): number {
+    return rects.reduce((total: number, r: ContentProtectionRect) => {
+      return total + this.getContentLength(r);
+    }, 0);
+  }
+
+  private getContentLength(rect: ContentProtectionRect) {
+    const r = rect;
+    return typeof r.textContent === "string" ? r.textContent.length : 0;
   }
 
   private setupEvents(): void {
@@ -752,7 +773,9 @@ export default class ContentProtectionModule implements ReaderModule {
       console.log("before print");
     }
 
-    this.obfuscateAllRects();
+    if (typeof this.configApi?.onBeforePrint === "function") {
+      this.configApi.onBeforePrint(() => this.obfuscateAllRects());
+    }
 
     if (this.delegate && this.delegate.headerMenu) { 
       this.delegate.headerMenu.style.display = "none";
@@ -904,10 +927,6 @@ export default class ContentProtectionModule implements ReaderModule {
     const outsideViewport = this.isOutsideViewport(rect);
     const beingHacked = this.isBeingHacked(securityContainer);
 
-    if (!this.doAllowDescramble()) {
-      return this.obfuscate(rect);
-    }
-
     if (rect.isObfuscated && !outsideViewport && !beingHacked && !isHacked) {
       rect.node.textContent = rect.textContent;
       rect.isObfuscated = false;
@@ -916,10 +935,6 @@ export default class ContentProtectionModule implements ReaderModule {
     if (!rect.isObfuscated && (outsideViewport || beingHacked || isHacked)) {
       this.obfuscate(rect);
     }
-
-    if (!rect.isObfuscated) {
-      this.totalRectsDescrambled += 1;
-    }
   }
 
   private obfuscate(rect: ContentProtectionRect): void {
@@ -927,13 +942,14 @@ export default class ContentProtectionModule implements ReaderModule {
     rect.isObfuscated = true;
   }
 
-  private doAllowDescramble(): boolean {
-    if (typeof this.properties.maxPercentageOfViewableContentNodes !== "number") {
-      return true;
-    }
-    const totalRectsCount: number = this.rects.length; 
-    const descrambledPercentage: number = (this.totalRectsDescrambled / totalRectsCount) * 100;
-    return descrambledPercentage < this.properties.maxPercentageOfViewableContentNodes;
+  private getPercentContentInViewport(rects: ContentProtectionRect[], totalContentLengthAvailable: number) {
+    const totalContentInViewport: number = rects.reduce((total, r: ContentProtectionRect) => {
+      if (!this.isOutsideViewport(r)) {
+        return total + r.textContent.length;
+      }
+      return total;
+    }, 0);
+    return Math.round((totalContentInViewport / totalContentLengthAvailable) * 100);
   }
 
   private obfuscateAllRects() {
@@ -1018,15 +1034,17 @@ export default class ContentProtectionModule implements ReaderModule {
     const isAbove = bottom < windowTop;
     const isBelow = rect.top > windowBottom;
 
-    // Consider left boundary to be one full screen width left of the leftmost
+    const padding = Math.round(window.innerWidth / 100);
+
+    // Consider left boundary to be a tenth of one full screen width left of the leftmost
     // edge of the viewing area. This is so text originating on the previous
     // screen does not flow onto the current screen scrambled.
-    const isLeft = right < (windowLeft - window.innerWidth);
+    const isLeft = right < (windowLeft - padding);
 
-    // Consider right boundary to be one full screen width right of the rightmost
+    // Consider right boundary to be a tenth of one full screen width right of the rightmost
     // edge of the viewing area. This is so quickly paging through the book
     // does not result in visible page descrambling.
-    const isRight = rect.left > (windowRight + window.innerWidth);
+    const isRight = rect.left > (windowRight + padding);
 
     return isAbove || isBelow || isLeft || isRight;
   }
