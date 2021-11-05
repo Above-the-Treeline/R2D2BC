@@ -44,7 +44,6 @@ export interface ContentProtectionModuleProperties {
   hideTargetUrl: boolean;
   disableDrag: boolean;
   supportedBrowsers: [];
-  maxPercentageOfViewableContent?: number;
 }
 
 export interface ContentProtectionModuleConfig
