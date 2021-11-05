@@ -83,7 +83,7 @@ export default class ContentProtectionModule implements ReaderModule {
     config: ContentProtectionModuleConfig
   ): Promise<void> {
     if (this.isCurrentBrowserSupported(config)) {
-      if (false) {
+      if (config.detectInspect) {
         await this.startInspectorProtection(config);
       }
     } else {
@@ -400,27 +400,9 @@ export default class ContentProtectionModule implements ReaderModule {
   }
 
   private toggleAllRects() {
-    const totalContentLengthAvailable: number = this.countTotalAmountOfChars(this.rects);
-    const contentPercentageVisible = this.getPercentContentInViewport(this.rects, totalContentLengthAvailable);
-    console.log("content percent visible: ", contentPercentageVisible);
-    if ((totalContentLengthAvailable > 10000) && (contentPercentageVisible > this.properties.maxPercentageOfViewableContent)) {
-      this.obfuscateAllRects();
-    } else {
-      this.rects.forEach((rect) => {
-        this.toggleRect(rect, this.securityContainer, this.isHacked)
-      });
-    }
-  }
-
-  private countTotalAmountOfChars(rects: ContentProtectionRect[]): number {
-    return rects.reduce((total: number, r: ContentProtectionRect) => {
-      return total + this.getContentLength(r);
-    }, 0);
-  }
-
-  private getContentLength(rect: ContentProtectionRect) {
-    const r = rect;
-    return typeof r.textContent === "string" ? r.textContent.length : 0;
+    this.rects.forEach((rect) => {
+      this.toggleRect(rect, this.securityContainer, this.isHacked)
+    });
   }
 
   private setupEvents(): void {
@@ -942,16 +924,6 @@ export default class ContentProtectionModule implements ReaderModule {
     rect.isObfuscated = true;
   }
 
-  private getPercentContentInViewport(rects: ContentProtectionRect[], totalContentLengthAvailable: number) {
-    const totalContentInViewport: number = rects.reduce((total, r: ContentProtectionRect) => {
-      if (!this.isOutsideViewport(r)) {
-        return total + r.textContent.length;
-      }
-      return total;
-    }, 0);
-    return Math.round((totalContentInViewport / totalContentLengthAvailable) * 100);
-  }
-
   private obfuscateAllRects() {
     for (const iframe of this.delegate.iframes) {
       const body = HTMLUtilities.findRequiredIframeElement(
@@ -1034,7 +1006,7 @@ export default class ContentProtectionModule implements ReaderModule {
     const isAbove = bottom < windowTop;
     const isBelow = rect.top > windowBottom;
 
-    const padding = Math.round(window.innerWidth / 100);
+    const padding = Math.round(window.innerWidth / 10);
 
     // Consider left boundary to be a tenth of one full screen width left of the leftmost
     // edge of the viewing area. This is so text originating on the previous
