@@ -767,7 +767,7 @@ export default class ContentProtectionModule implements ReaderModule {
     event.preventDefault();
     return false;
   }
-  async afterPrint(event: {
+  afterPrint(event: {
     preventDefault: () => void;
     stopPropagation: () => void;
   }) {
