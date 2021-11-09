@@ -25,7 +25,7 @@ import {
   removeEventListenerOptional,
 } from "../../utils/EventHandler";
 import { debounce } from "debounce";
-import { IS_DEV } from "../..";
+import { IS_DEV } from "../../utils";
 import { delay } from "../../utils";
 import { DevtoolsDetector, checkers } from "devtools-detector";
 import { getUserAgentRegExp } from "browserslist-useragent-regexp";
