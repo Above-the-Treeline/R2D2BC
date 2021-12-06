@@ -533,7 +533,7 @@ export default class IFrameNavigator implements Navigator {
         "#reader-loading"
       ) as HTMLDivElement;
       if (this.loadingMessage) {
-        this.loadingMessage.innerHTML = getReaderLoading();
+        this.loadingMessage.innerHTML = getReaderLoading('Pulling your book from the shelf...');
         this.loadingMessage.style.display = "none"; 
       }
       this.errorMessage = HTMLUtilities.findElement(

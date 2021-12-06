@@ -41,7 +41,8 @@ export const defaultUpLinkTemplate = (
 </a>
 `;
 
-export const getReaderLoading = () => `<div class="center-loading-msg">${IconLib.icons.loading}<p>Pulling your book from the shelf...</p></div>`;
+export const getReaderLoading = (message: string) => `<div class="center-loading-msg">${IconLib.icons.loading}<p>${message}</p></div>`;
+
 export const readerError = `
     <span>
     ${IconLib.icons.error}
