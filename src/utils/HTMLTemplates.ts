@@ -41,7 +41,7 @@ export const defaultUpLinkTemplate = (
 </a>
 `;
 
-export const readerLoading = `${IconLib.icons.loading}`;
+export const getReaderLoading = () => `${IconLib.icons.loading}<p>Pulling your book from the shelf...</p>`;
 export const readerError = `
     <span>
     ${IconLib.icons.error}

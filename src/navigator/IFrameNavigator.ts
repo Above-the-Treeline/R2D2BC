@@ -28,7 +28,7 @@ import * as BrowserUtilities from "../utils/BrowserUtilities";
 import * as HTMLUtilities from "../utils/HTMLUtilities";
 import {
   readerError,
-  readerLoading,
+  getReaderLoading,
   simpleUpLinkTemplate,
 } from "../utils/HTMLTemplates";
 import {
@@ -533,8 +533,8 @@ export default class IFrameNavigator implements Navigator {
         "#reader-loading"
       ) as HTMLDivElement;
       if (this.loadingMessage) {
-        this.loadingMessage.innerHTML = readerLoading;
-        this.loadingMessage.style.display = "none";
+        this.loadingMessage.innerHTML = getReaderLoading();
+        this.loadingMessage.style.display = "none"; 
       }
       this.errorMessage = HTMLUtilities.findElement(
         mainElement,
