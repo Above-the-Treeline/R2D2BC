@@ -19,27 +19,37 @@
  
 @-webkit-keyframes load {
   0% {
-    transform: translate(-2.5rem, -2.5rem) rotate(0deg);
+    transform:  rotate(0deg);
   }
 
   100% {
-    transform: translate(-2.5rem, -2.5rem) rotate(360deg)
+    transform:  rotate(360deg)
   }
 }
 
 @keyframes load {
   0% {
-    transform: translate(-2.5rem, -2.5rem) rotate(0deg);
+    transform:  rotate(0deg);
   }
 
   100% {
-    transform: translate(-2.5rem, -2.5rem) rotate(360deg)
+    transform:  rotate(360deg)
   }
 }
 
 .loading.is-loading {
   .icon {
     animation: load 1s ease-in-out infinite;
+  }
+
+  .center-loading-msg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    color: #FC601F;
+    font-size: large;
   }
 }
 
@@ -58,13 +68,8 @@
   cursor: default;
 
   .icon {
-    display: block;
-    position: absolute;
-    top: 50%;
-    left: 50%;
     width: 3rem;
     height: 3rem;
-    transform: translate(-50%, -50%);
     fill: $ui-default;
   }
 }
