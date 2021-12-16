@@ -43,8 +43,10 @@ import TTSModule2 from "./modules/TTS/TTSModule2";
 import PageBreakModule from "./modules/pagebreak/PageBreakModule";
 import DefinitionsModule from "./modules/search/DefinitionsModule";
 import { IS_DEV } from "./utils";
+import { LayerSettings } from "./modules/highlight/LayerSettings";
 
 let D2Settings: UserSettings;
+let D2Layers: LayerSettings;
 let D2TTSSettings: TTSSettings;
 let D2MediaOverlaySettings: MediaOverlaySettings;
 let D2Navigator: IFrameNavigator;
@@ -636,6 +638,49 @@ export function showAnnotationLayer() {
 exports.showAnnotationLayer = function () {
   showAnnotationLayer();
 };
+
+export function hideLayer(layer) {
+  if (IS_DEV) {
+    console.log("hideLayer");
+  }
+  D2Navigator.hideLayer(layer);
+}
+exports.hideLayer = function (layer) {
+  hideLayer(layer);
+};
+export function showLayer(layer) {
+  if (IS_DEV) {
+    console.log("showLayer");
+  }
+  D2Navigator.showLayer(layer);
+}
+exports.showLayer = function (layer) {
+  showLayer(layer);
+};
+
+export async function clearDefinitions() {
+  if (IS_DEV) {
+    console.log("clearDefinitions");
+  }
+  if (DefinitionsModuleInstance) {
+    await DefinitionsModuleInstance.clearDefinitions();
+  }
+}
+exports.clearDefinitions = async function () {
+  await clearDefinitions();
+};
+export async function addDefinition(definition) {
+  if (IS_DEV) {
+    console.log("addDefinition");
+  }
+  if (DefinitionsModuleInstance) {
+    await DefinitionsModuleInstance.addDefinition(definition);
+  }
+}
+exports.addDefinition = async function (definition) {
+  await addDefinition(definition);
+};
+
 // currently not used or functional
 export function snapToElement(value) {
   if (IS_DEV) {
@@ -684,6 +729,10 @@ export async function load(config: ReaderConfig): Promise<any> {
 
   let settingsStore = new LocalStorageStore({
     prefix: "r2d2bc-reader",
+    useLocalStorage: config.useLocalStorage,
+  });
+  let layerStore = new LocalStorageStore({
+    prefix: "r2d2bc-layers",
     useLocalStorage: config.useLocalStorage,
   });
 
@@ -827,6 +876,8 @@ export async function load(config: ReaderConfig): Promise<any> {
     }
   }
 
+  D2Layers = await LayerSettings.create({ store: layerStore });
+
   // Settings
   D2Settings = await UserSettings.create({
     store: settingsStore,
@@ -870,6 +921,7 @@ export async function load(config: ReaderConfig): Promise<any> {
   // Highlighter
   D2Highlighter = await TextHighlighter.create({
     delegate: D2Navigator,
+    layerSettings: D2Layers,
     ...config.highlighter,
   });
 
@@ -988,13 +1040,15 @@ export async function load(config: ReaderConfig): Promise<any> {
       ...config.mediaOverlays,
     });
   }
-
-  if ((publication.Metadata.Rendition?.Layout ?? "unknown") !== "fixed") {
-    PageBreakModuleInstance = await PageBreakModule.create({
-      publication: publication,
-      headerMenu: headerMenu,
-      delegate: D2Navigator,
-    });
+  if (config.rights?.enablePageBreaks ?? true) {
+    if ((publication.Metadata.Rendition?.Layout ?? "unknown") !== "fixed") {
+      PageBreakModuleInstance = await PageBreakModule.create({
+        publication: publication,
+        headerMenu: headerMenu,
+        delegate: D2Navigator,
+        ...config.pagebreak,
+      });
+    }
   }
 
   return new Promise((resolve) => resolve(D2Navigator));
