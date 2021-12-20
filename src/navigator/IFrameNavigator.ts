@@ -1616,7 +1616,7 @@ export default class IFrameNavigator implements Navigator {
 
         if (this.rights?.enableContentProtection) {
           if (this.contentProtectionModule !== undefined) {
-            await this.contentProtectionModule.initialize();
+            await this.contentProtectionModule.recalculate(10);
           }
         }
 
