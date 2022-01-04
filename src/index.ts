@@ -720,6 +720,15 @@ export async function load(config: ReaderConfig): Promise<any> {
     }
   }
 
+  const getInjectables = () => {
+    let layout = publication.Metadata.Rendition?.Layout ?? 'unknown'
+    if (layout === 'fixed' && config.injectablesFixed) {
+      return config.injectablesFixed
+    } else {
+      return config.injectables
+    }
+  }
+
   // Settings
   D2Settings = await UserSettings.create({
     store: settingsStore,
@@ -727,10 +736,7 @@ export async function load(config: ReaderConfig): Promise<any> {
     headerMenu: headerMenu,
     material: config.material,
     api: config.api,
-    injectables:
-      (publication.Metadata.Rendition?.Layout ?? "unknown") === "fixed"
-        ? config.injectablesFixed
-        : config.injectables,
+    injectables: getInjectables(),
     layout:
       (publication.Metadata.Rendition?.Layout ?? "unknown") === "fixed"
         ? "fixed"
@@ -751,10 +757,7 @@ export async function load(config: ReaderConfig): Promise<any> {
     api: config.api,
     rights: config.rights,
     tts: config.tts,
-    injectables:
-      (publication.Metadata.Rendition?.Layout ?? "unknown") === "fixed"
-        ? config.injectablesFixed
-        : config.injectables,
+    injectables: getInjectables(),
     attributes: config.attributes,
     services: config.services,
   });
