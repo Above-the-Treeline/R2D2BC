@@ -516,10 +516,10 @@ export default class IFrameNavigator implements Navigator {
           mainElement,
           "main#iframe-wrapper"
         ) as HTMLElement;
-        wrapper.style.height = this.getWrapperHeight() + "px";
+        wrapper.style.height = this.getIframeWrapperHeight() + "px";
         var iframeParent = this.iframes[0].parentElement
           .parentElement as HTMLElement;
-        iframeParent.style.height = this.getWrapperHeight() + "px";
+        iframeParent.style.height = this.getIframeWrapperHeight() + "px";
       } else {
         if (this.iframes.length == 2) {
           this.iframes.pop();
@@ -2607,13 +2607,13 @@ export default class IFrameNavigator implements Navigator {
         this.mainElement,
         "main#iframe-wrapper"
       ) as HTMLElement;
-      wrapper.style.height = this.getWrapperHeight() + "px";
+      wrapper.style.height = this.getIframeWrapperHeight() + "px";
 
       var iframeParent =
         index === 0 && this.iframes.length == 2
           ? this.iframes[1].parentElement.parentElement
           : (this.iframes[0].parentElement.parentElement as HTMLElement);
-      iframeParent.style.height = this.getWrapperHeight() + "px";
+      iframeParent.style.height = this.getIframeWrapperHeight() + "px";
 
       let height = getComputedStyle(
         index === 0 && this.iframes.length == 2
@@ -3186,16 +3186,16 @@ export default class IFrameNavigator implements Navigator {
       const body = innerDoc.children[0].children[1] as HTMLElement;
       const page = body.firstElementChild as HTMLElement
       if (page) {
-        page.style.height = this.getGraphicNovelAspectRatio().height + "px"
-        page.style.width = this.getGraphicNovelAspectRatio().width + "px"
+        page.style.height = this.getFixedLayoutWidthAndHeight().height + "px"
+        page.style.width = this.getFixedLayoutWidthAndHeight().width + "px"
       }
   }
   }
 
-  private getGraphicNovelAspectRatio() {
+  private getFixedLayoutWidthAndHeight() {
     const maxWidth = parseInt(getComputedStyle(this.iframes[0].contentDocument.body).width, 10)
     const optimalHeight = (1024* maxWidth)/663
-    const maxHeight = this.getWrapperHeight()
+    const maxHeight = this.getIframeWrapperHeight()
     const optimalWidth = (663* maxHeight) /1024
     
     if (optimalHeight < maxHeight) {
@@ -3211,7 +3211,7 @@ export default class IFrameNavigator implements Navigator {
     }
   }
 
-  private getWrapperHeight() {
+  private getIframeWrapperHeight() {
     return Number(BrowserUtilities.getHeight() - 40 - this.attributes.margin) + 40;
   }
 
