@@ -1620,6 +1620,10 @@ export default class IFrameNavigator implements Navigator {
           }
         }
 
+        if (this.isScrolling && this.iframes[0]) {
+          this.iframes[0].height = window.innerHeight + "px";
+        }
+
         this.hideLoadingMessage();
         this.showIframeContents();
         if (this.mediaOverlayModule !== undefined) {
