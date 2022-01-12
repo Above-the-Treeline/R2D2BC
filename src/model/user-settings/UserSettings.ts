@@ -1073,7 +1073,9 @@ export class UserSettings implements IUserSettings {
       );
       
       setTimeout(async () => {
-        this.view.setMode(this.verticalScroll);
+        if (this.view.setMode) {
+          this.view.setMode(this.verticalScroll);
+        }
         this.view.goToProgression(position);
         this.viewChangeCallback();
       }, 10);
