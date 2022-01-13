@@ -944,7 +944,8 @@ export default class ContentProtectionModule implements ReaderModule {
   }
 
   obfuscateText(text: string): string {
-    return this.scramble(text, true);
+    return this.scrambleMinimally(text);
+    //return this.scramble(text, true);
   }
 
   measureTextNode(node: Element): any {
@@ -1048,5 +1049,49 @@ export default class ContentProtectionModule implements ReaderModule {
       });
     }
     return paragraph ? scramble(words).join(" ") : words.join(" ");
+  }
+  scrambleMinimally(text: string) {
+    const divisor = 3;
+
+    function obfuscate(text) {
+      const words = text.split(" ");
+      console.log(words);
+      return words.map((word) => {
+        if (doNotScrambleWord(word)) {
+          return word;
+        }
+        return scramble(word);
+      });
+    }
+
+    function doNotScrambleWord(str) {
+      return str.length < divisor || containsSpecialChars(str);
+    }
+
+    function containsSpecialChars(str) {
+      const specialChars = /[`!@#$%^&*()_+\-=[\]{};':“"\\|,.<>/?~’]/;
+      return specialChars.test(str);
+    }
+
+    function scramble(word) {
+      let tokens = word.split("");
+
+      let len = tokens.length;
+      let n = Math.floor(len / divisor);
+
+      let swap;
+      let i;
+
+      while (n > 0) {
+        i = Math.floor(Math.random() * len);
+        swap = tokens[n];
+        tokens[n] = tokens[i];
+        tokens[i] = swap;
+        n--;
+      }
+      return tokens.join("");
+    }
+
+    return obfuscate(text).join(" ");
   }
 }
