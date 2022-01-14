@@ -291,9 +291,9 @@ export default class ReflowableBookView implements BookView {
       return (
         Math.ceil(
           this.iframe.contentDocument.scrollingElement.scrollHeight -
-           document.scrollingElement.scrollTop
+            document.scrollingElement.scrollTop
         ) -
-         1 <=
+          1 <=
         BrowserUtilities.getHeight()
       );
     } else {
