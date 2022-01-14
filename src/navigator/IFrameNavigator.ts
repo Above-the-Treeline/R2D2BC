@@ -1609,7 +1609,7 @@ export default class IFrameNavigator implements Navigator {
             (this.newPosition as Annotation).highlight.selectionInfo.rangeInfo
               .startContainerElementCssSelector
           );
-        } else if (bookViewPosition >= 0) {
+        } else if (bookViewPosition > 0) {
           this.view.goToProgression(bookViewPosition);
         }
         this.newPosition = null;
