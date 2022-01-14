@@ -471,7 +471,8 @@ export default class ReflowableBookView implements BookView {
       let body = this.iframe.contentWindow.document.body;
       let scrollingElement = this.iframe.contentDocument.scrollingElement;
       if (scrollingElement) {
-        this.iframe.height = (scrollingElement.scrollHeight + this.attributes.iframePaddingTop) + "px";
+        const padding = this.attributes?.iframePaddingTop ?? 0;
+        this.iframe.height = (scrollingElement.scrollHeight + padding) + "px";
       } else if (body) {
         this.iframe.height = parseInt(getComputedStyle(body).height) + "px";
       }
