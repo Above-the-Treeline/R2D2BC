@@ -37,6 +37,7 @@ interface BookView {
   isPaginated();
   goToElement?(element: HTMLElement | null, relative?: boolean): void;
   setSize(): void;
+  resetIframeSize?(): void;
   setIframeHeight?(iframe: any);
 
   /** Load this view in its book element, at the specified position. */

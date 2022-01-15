@@ -1415,6 +1415,9 @@ export default class IFrameNavigator implements Navigator {
   private async handleIFrameLoad(): Promise<void> {
     if (this.errorMessage) this.errorMessage.style.display = "none";
     this.showLoadingMessageAfterDelay();
+    if (this.view?.isScrollMode()) {
+      this.view?.resetIframeSize();
+    }
     try {
       let bookViewPosition = 0;
       if (this.newPosition) {

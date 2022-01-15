@@ -26,6 +26,7 @@ import IFrameNavigator, {
   IFrameAttributes,
 } from "../navigator/IFrameNavigator";
 import { debounce } from "debounce";
+import { delay } from "../utils";
 
 export default class ReflowableBookView implements BookView {
   layout = "reflowable";
@@ -466,8 +467,6 @@ export default class ReflowableBookView implements BookView {
         this.height + "px";
       this.iframe.height = this.height + "px";
     } else {
-      // Remove previous iframe height so body scroll height will be accurate.
-      this.iframe.height = "0";
       let body = this.iframe.contentWindow.document.body;
       let scrollingElement = this.iframe.contentDocument.scrollingElement;
       if (scrollingElement) {
@@ -476,6 +475,16 @@ export default class ReflowableBookView implements BookView {
       } else if (body) {
         this.iframe.height = parseInt(getComputedStyle(body).height) + "px";
       }
+    }
+  }
+
+  async resetIframeSize(): Promise<void> {
+    if (this.scrollMode) {
+      // Remove previous iframe height so body scroll height will be accurate.
+      // You could also try setting this to window.innerHeight
+      this.iframe.height = "0";
+      await delay(100);
+      this.setSize();
     }
   }
 
