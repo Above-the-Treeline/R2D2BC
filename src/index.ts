@@ -523,6 +523,12 @@ export function currentLocator() {
 exports.currentLocator = function () {
   return currentLocator();
 };
+export function getTotalBookReadPercentage() {
+  return D2Navigator.getTotalBookReadPercentage();
+}
+exports.getTotalBookReadPercentage = function() {
+  return getTotalBookReadPercentage();
+}
 export function positions() {
   if (IS_DEV) {
     console.log("positions");

@@ -1644,10 +1644,23 @@ export default class IFrameNavigator implements Navigator {
     }
   }
 
+  getTotalBookReadPercentage(): number {
+    if (this.view.layout === "fixed") return 0;
+    const locator = this.currentLocator();
+    if (locator.locations && locator.locations.totalProgression) {
+      return this.calculateTotalBookReadPercentage(locator);
+    }
+    return 0;
+  }
+
+  calculateTotalBookReadPercentage(position: Locator): number {
+    return Math.round(position.locations.totalProgression * 100);
+  }
+
   private setTotalBookReadFeedback(currPosition: Locator) {
     if (this.currentChapterLink.href && this.totalBookPercentRead) {
       if (currPosition.locations && currPosition.locations.totalProgression) {
-        const percent = Math.round(currPosition.locations.totalProgression * 100);
+        const percent = this.calculateTotalBookReadPercentage(currPosition);
         this.totalBookPercentRead.innerHTML = ` - ${percent}% Read`;
       } else {
         this.totalBookPercentRead.innerHTML = "";
