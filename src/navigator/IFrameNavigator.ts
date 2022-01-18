@@ -252,6 +252,7 @@ export default class IFrameNavigator implements Navigator {
   private chapterTitle: HTMLSpanElement;
   private chapterPosition: HTMLSpanElement;
   private remainingPositions: HTMLSpanElement;
+  private totalBookPercentRead: HTMLSpanElement;
   private newPosition: Locator | null;
   private newElementId: string | null;
   private isBeingStyled: boolean;
@@ -568,21 +569,27 @@ export default class IFrameNavigator implements Navigator {
           "#book-title"
         ) as HTMLSpanElement;
 
-      if (this.infoBottom)
+      if (this.infoBottom) {
         this.chapterTitle = HTMLUtilities.findElement(
           this.infoBottom,
           "span[class=chapter-title]"
         ) as HTMLSpanElement;
-      if (this.infoBottom)
+
         this.chapterPosition = HTMLUtilities.findElement(
           this.infoBottom,
           "span[class=chapter-position]"
         ) as HTMLSpanElement;
-      if (this.infoBottom)
+
         this.remainingPositions = HTMLUtilities.findElement(
           this.infoBottom,
           "span[class=remaining-positions]"
         ) as HTMLSpanElement;
+
+        this.totalBookPercentRead = HTMLUtilities.findElement(
+          this.infoBottom,
+          "span[class=total-book-percent-read]"
+        ) as HTMLSpanElement;
+      }
 
       if (this.headerMenu)
         this.espandMenuIcon = HTMLUtilities.findElement(
@@ -1019,6 +1026,8 @@ export default class IFrameNavigator implements Navigator {
             this.chapterPosition.style.display = "inline";
           if (this.remainingPositions)
             this.remainingPositions.style.display = "inline";
+          if (this.totalBookPercentRead)
+            this.totalBookPercentRead.style.display = "inline";
           if (this.eventHandler) {
             this.eventHandler.onInternalLink = this.handleInternalLink.bind(
               this
@@ -1159,6 +1168,8 @@ export default class IFrameNavigator implements Navigator {
           if (this.chapterPosition) this.chapterPosition.style.display = "none";
           if (this.remainingPositions)
             this.remainingPositions.style.display = "none";
+          if (this.totalBookPercentRead)
+            this.totalBookPercentRead.style.display = "none";
           if (this.eventHandler) {
             this.eventHandler.onInternalLink = this.handleInternalLink.bind(
               this
@@ -1630,6 +1641,17 @@ export default class IFrameNavigator implements Navigator {
       console.error(err);
       this.abortOnError();
       return new Promise<void>((_, reject) => reject(err)).catch(() => {});
+    }
+  }
+
+  private setTotalBookReadFeedback(currPosition: Locator) {
+    if (this.currentChapterLink.href && this.totalBookPercentRead) {
+      if (currPosition.locations && currPosition.locations.totalProgression) {
+        const percent = Math.round(currPosition.locations.totalProgression * 100);
+        this.totalBookPercentRead.innerHTML = ` - ${percent}% Read`;
+      } else {
+        this.totalBookPercentRead.innerHTML = "";
+      }
     }
   }
 
@@ -2765,6 +2787,7 @@ export default class IFrameNavigator implements Navigator {
     if (this.view.layout === "fixed") {
       if (this.chapterPosition) this.chapterPosition.innerHTML = "";
       if (this.remainingPositions) this.remainingPositions.innerHTML = "";
+      if (this.totalBookPercentRead) this.totalBookPercentRead.innerHTML = "";
     } else {
       if (this.view?.isPaginated()) {
         const locator = this.currentLocator();
@@ -2787,9 +2810,13 @@ export default class IFrameNavigator implements Navigator {
               "Page " + currentPage + " of " + pageCount;
           }
         }
+        if (this.totalBookPercentRead) {
+          this.setTotalBookReadFeedback(locator);
+        }
       } else {
         if (this.chapterPosition) this.chapterPosition.innerHTML = "";
         if (this.remainingPositions) this.remainingPositions.innerHTML = "";
+        if (this.totalBookPercentRead) this.totalBookPercentRead.innerHTML = "";
       }
     }
     if (save) {
