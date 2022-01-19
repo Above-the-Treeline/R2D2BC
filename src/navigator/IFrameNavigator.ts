@@ -516,12 +516,10 @@ export default class IFrameNavigator implements Navigator {
           mainElement,
           "main#iframe-wrapper"
         ) as HTMLElement;
-        const minHeight =
-          BrowserUtilities.getHeight() - 40 - this.attributes.margin;
-        wrapper.style.height = minHeight + 40 + "px";
+        wrapper.style.height = this.getIframeWrapperHeight() + "px";
         var iframeParent = this.iframes[0].parentElement
           .parentElement as HTMLElement;
-        iframeParent.style.height = minHeight + 40 + "px";
+        iframeParent.style.height = this.getIframeWrapperHeight() + "px";
       } else {
         if (this.iframes.length == 2) {
           this.iframes.pop();
@@ -1621,6 +1619,7 @@ export default class IFrameNavigator implements Navigator {
         }
 
         this.hideLoadingMessage();
+        this.finalResize()
         this.showIframeContents();
         await this.updatePositionInfo();
       }, 200);
@@ -2131,20 +2130,6 @@ export default class IFrameNavigator implements Navigator {
           }
         }
 
-        var iframeParent =
-          index === 0 && this.iframes.length == 2
-            ? this.iframes[1].parentElement.parentElement
-            : (this.iframes[0].parentElement.parentElement as HTMLElement);
-        var widthRatio =
-          (parseInt(getComputedStyle(iframeParent).width) - 100) /
-          (this.iframes.length == 2
-            ? parseInt(width.replace("px", "")) * 2 + 200
-            : parseInt(width.replace("px", "")));
-        var heightRatio =
-          (parseInt(getComputedStyle(iframeParent).height) - 100) /
-          parseInt(height.replace("px", ""));
-        var scale = Math.min(widthRatio, heightRatio);
-        iframeParent.style.transform = "scale(" + scale + ")";
         for (const iframe of this.iframes) {
           iframe.style.height = height;
           iframe.style.width = width;
@@ -2622,15 +2607,13 @@ export default class IFrameNavigator implements Navigator {
         this.mainElement,
         "main#iframe-wrapper"
       ) as HTMLElement;
-      const minHeight =
-        BrowserUtilities.getHeight() - 40 - this.attributes.margin;
-      wrapper.style.height = minHeight + 40 + "px";
+      wrapper.style.height = this.getIframeWrapperHeight() + "px";
 
       var iframeParent =
         index === 0 && this.iframes.length == 2
           ? this.iframes[1].parentElement.parentElement
           : (this.iframes[0].parentElement.parentElement as HTMLElement);
-      iframeParent.style.height = minHeight + 40 + "px";
+      iframeParent.style.height = this.getIframeWrapperHeight() + "px";
 
       let height = getComputedStyle(
         index === 0 && this.iframes.length == 2
@@ -2667,18 +2650,7 @@ export default class IFrameNavigator implements Navigator {
           }
         }
       }
-
-      var widthRatio =
-        (parseInt(getComputedStyle(iframeParent).width) - 100) /
-        (this.iframes.length == 2
-          ? parseInt(width.replace("px", "")) * 2 + 200
-          : parseInt(width.replace("px", "")));
-      var heightRatio =
-        (parseInt(getComputedStyle(iframeParent).height) - 100) /
-        parseInt(height.replace("px", ""));
-      var scale = Math.min(widthRatio, heightRatio);
-      iframeParent.style.transform = "scale(" + scale + ")";
-
+      this.finalResize()
       for (const iframe of this.iframes) {
         iframe.style.height = height;
         iframe.style.width = width;
@@ -3205,6 +3177,43 @@ export default class IFrameNavigator implements Navigator {
       if (this.api?.resourceAtStart) this.api?.resourceAtStart();
     }
   }, 200);
+
+  private finalResize() {
+    if (
+      (this.publication.Metadata.Rendition?.Layout ?? "unknown") === "fixed"
+    ) {
+      const innerDoc = this.iframes[0].contentDocument ? this.iframes[0].contentDocument : this.iframes[0].contentWindow.document
+      const body = innerDoc.children[0].children[1] as HTMLElement;
+      const page = body.firstElementChild as HTMLElement
+      if (page) {
+        page.style.height = this.getFixedLayoutWidthAndHeight().height + "px"
+        page.style.width = this.getFixedLayoutWidthAndHeight().width + "px"
+      }
+  }
+  }
+
+  private getFixedLayoutWidthAndHeight() {
+    const maxWidth = parseInt(getComputedStyle(this.iframes[0].contentDocument.body).width, 10)
+    const optimalHeight = (1024* maxWidth)/663
+    const maxHeight = this.getIframeWrapperHeight()
+    const optimalWidth = (663* maxHeight) /1024
+    
+    if (optimalHeight < maxHeight) {
+      return {
+        width: maxWidth,
+        height: optimalHeight
+      }
+    } else {
+      return {
+        width: optimalWidth,
+        height: maxHeight
+      }
+    }
+  }
+
+  private getIframeWrapperHeight() {
+    return Number(BrowserUtilities.getHeight() - 40 - this.attributes.margin) + 40;
+  }
 
   private showIframeContents() {
     this.isBeingStyled = false;
