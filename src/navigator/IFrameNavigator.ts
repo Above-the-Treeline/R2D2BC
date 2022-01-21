@@ -1551,7 +1551,9 @@ export default class IFrameNavigator implements Navigator {
           this.touchEventHandler.setupEvents(iframe.contentDocument);
           this.keyboardEventHandler.setupEvents(iframe.contentDocument);
         }
-        this.touchEventHandler.setupEvents(this.errorMessage);
+        if (this.errorMessage) {
+          this.touchEventHandler.setupEvents(this.errorMessage);
+        }
         if (!this.didInitKeyboardEventHandler) {
           this.keyboardEventHandler.delegate = this;
           this.keyboardEventHandler.keydown(document);
