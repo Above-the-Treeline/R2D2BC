@@ -29,6 +29,7 @@ import { IS_DEV } from "../../utils";
 import { delay } from "../../utils";
 import { DevtoolsDetector, checkers } from "devtools-detector";
 import { getUserAgentRegExp } from "browserslist-useragent-regexp";
+import obfuscate, { ObfuscationConfigType } from "./obfuscate";
 
 export interface ContentProtectionModuleProperties {
   enforceSupportedBrowsers: boolean;
@@ -44,6 +45,7 @@ export interface ContentProtectionModuleProperties {
   hideTargetUrl: boolean;
   disableDrag: boolean;
   supportedBrowsers: [];
+  obfuscation?: ObfuscationConfigType;
 }
 
 export interface ContentProtectionModuleConfig
@@ -841,15 +843,15 @@ export default class ContentProtectionModule implements ReaderModule {
   recalculate(delay: number = 0): Promise<boolean> {
     return new Promise(resolve => {
       if (this.properties?.enableObfuscation) {
-          const onDoResize = debounce(() => {
-            this.calcRects(this.rects);
-            if (this.rects !== undefined) {
-              this.rects.forEach((rect) =>
-                this.toggleRect(rect, this.securityContainer, this.isHacked)
-              );
-            }
-            resolve(true);
-          }, delay);
+        const onDoResize = debounce(() => {
+          this.calcRects(this.rects);
+          if (this.rects !== undefined) {
+            this.rects.forEach((rect) =>
+              this.toggleRect(rect, this.securityContainer, this.isHacked)
+            );
+          }
+          resolve(true);
+        }, delay);
         if (this.rects) {
           this.observe();
           onDoResize();
@@ -944,7 +946,7 @@ export default class ContentProtectionModule implements ReaderModule {
   }
 
   obfuscateText(text: string): string {
-    return this.scramble(text, true);
+    return obfuscate(text, this.properties.obfuscation);
   }
 
   measureTextNode(node: Element): any {
@@ -1023,30 +1025,5 @@ export default class ContentProtectionModule implements ReaderModule {
     }
 
     return nodes;
-  }
-  scramble(str: any, letters: boolean = false, paragraph: boolean = false) {
-    var words = str.split(" ");
-
-    function scramble(arr: any) {
-      var len = arr.length;
-      var swap;
-      var i;
-
-      while (len > 0) {
-        i = Math.floor(Math.random() * len);
-        len--;
-        swap = arr[len];
-        arr[len] = arr[i];
-        arr[i] = swap;
-      }
-      return arr;
-    }
-
-    if (letters) {
-      words = words.map(function (word: any) {
-        return scramble(word.split("")).join("");
-      });
-    }
-    return paragraph ? scramble(words).join(" ") : words.join(" ");
   }
 }
