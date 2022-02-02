@@ -989,6 +989,22 @@ export default class IFrameNavigator implements Navigator {
         this.nextChapterBottomAnchorElement.style.display = "none";
       if (this.previousChapterTopAnchorElement)
         this.previousChapterTopAnchorElement.style.display = "none";
+      if (this.keyboardEventHandler) {
+        this.keyboardEventHandler.onBackwardSwipe = this.handlePreviousChapterClick.bind(
+          this
+        );
+        this.keyboardEventHandler.onForwardSwipe = this.handleNextChapterClick.bind(
+          this
+        );
+      }
+      if (this.touchEventHandler) {
+        this.touchEventHandler.onBackwardSwipe = this.handlePreviousPageClick.bind(
+          this
+        );
+        this.touchEventHandler.onForwardSwipe = this.handleNextPageClick.bind(
+          this
+        );
+      }
     } else {
       this.settings.isPaginated().then((paginated) => {
         if (paginated) {
