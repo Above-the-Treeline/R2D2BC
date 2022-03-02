@@ -557,7 +557,7 @@ export default class IFrameNavigator implements Navigator {
         "#reader-loading"
       ) as HTMLDivElement;
       if (this.loadingMessage) {
-        this.loadingMessage.innerHTML = readerLoading;
+        this.loadingMessage.innerHTML = `<div>${readerLoading}<p id="pageNavigationLoadingMessage"></p></div>`;
         this.loadingMessage.style.display = "none";
       }
       this.errorMessage = HTMLUtilities.findElement(
@@ -1416,7 +1416,7 @@ export default class IFrameNavigator implements Navigator {
         if (IS_DEV) console.log(lastReadingPosition.href);
         if (IS_DEV) console.log(linkHref);
         lastReadingPosition.href = linkHref;
-        await this.navigate(lastReadingPosition);
+        await this.navigate(lastReadingPosition, 'Pulling your book from the shelf...');
       } else if (startUrl) {
         const position: ReadingPosition = {
           href: startUrl,
@@ -1427,7 +1427,7 @@ export default class IFrameNavigator implements Navigator {
           title: startLink.Title,
         };
 
-        await this.navigate(position);
+        await this.navigate(position, 'Pulling your book from the shelf...');
       }
 
       return new Promise<void>((resolve) => resolve());
@@ -1440,7 +1440,7 @@ export default class IFrameNavigator implements Navigator {
 
   private async handleIFrameLoad(): Promise<void> {
     if (this.errorMessage) this.errorMessage.style.display = "none";
-    this.showLoadingMessageAfterDelay();
+    this.showLoadingMessageAfterDelay('Pulling your book from the shelf...');
     try {
       let bookViewPosition = 0;
       if (this.newPosition) {
@@ -2933,7 +2933,7 @@ export default class IFrameNavigator implements Navigator {
       };
 
       this.stopReadAloud();
-      this.navigate(position);
+      this.navigate(position, 'Loading previous page');
     } else {
       if (this.previousChapterLink) {
         const position: Locator = {
@@ -2946,7 +2946,7 @@ export default class IFrameNavigator implements Navigator {
         };
 
         this.stopReadAloud();
-        this.navigate(position);
+        this.navigate(position, 'Loading previous page');
       }
     }
     if (event) {
@@ -2974,7 +2974,7 @@ export default class IFrameNavigator implements Navigator {
       };
 
       this.stopReadAloud();
-      this.navigate(position);
+      this.navigate(position, 'Loading next page');
     } else {
       if (this.nextChapterLink) {
         const position: Locator = {
@@ -2987,7 +2987,7 @@ export default class IFrameNavigator implements Navigator {
         };
 
         this.stopReadAloud();
-        this.navigate(position);
+        this.navigate(position, 'Loading next page');
       }
     }
     if (event) {
@@ -3031,7 +3031,7 @@ export default class IFrameNavigator implements Navigator {
     }
   }
 
-  async navigate(locator: Locator): Promise<void> {
+  async navigate(locator: Locator, loadingMessage?: string): Promise<void> {
     const exists = this.publication.getTOCItem(locator.href);
     if (exists) {
       var isCurrentLoaded = false;
@@ -3207,7 +3207,7 @@ export default class IFrameNavigator implements Navigator {
         }
 
         this.hideIframeContents();
-        this.showLoadingMessageAfterDelay();
+        this.showLoadingMessageAfterDelay(loadingMessage);
         if (locator.locations === undefined) {
           locator.locations = {
             progression: 0,
@@ -3343,9 +3343,15 @@ export default class IFrameNavigator implements Navigator {
     }, 150);
   }
 
-  private showLoadingMessageAfterDelay() {
+  private showLoadingMessageAfterDelay(message?: string) {
     this.isLoading = true;
-    if (this.isLoading && this.loadingMessage) {
+    if (message && this.isLoading && this.loadingMessage) {
+      this.loadingMessage.style.display = "block";
+      this.loadingMessage.classList.add("is-loading");
+      const messageContainer = document.getElementById('pageNavigationLoadingMessage')
+      messageContainer.innerText = ''
+      messageContainer.innerText = `${message}`
+    } else if (this.isLoading && this.loadingMessage) {
       this.loadingMessage.style.display = "block";
       this.loadingMessage.classList.add("is-loading");
     }
