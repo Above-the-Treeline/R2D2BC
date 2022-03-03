@@ -2938,7 +2938,7 @@ export default class IFrameNavigator implements Navigator {
       };
 
       this.stopReadAloud();
-      this.navigate(position, 'Another great page on the way...');
+      this.navigate(position);
     } else {
       if (this.previousChapterLink) {
         const position: Locator = {
@@ -2951,7 +2951,7 @@ export default class IFrameNavigator implements Navigator {
         };
 
         this.stopReadAloud();
-        this.navigate(position, 'Another great page on the way...');
+        this.navigate(position);
       }
     }
     if (event) {
@@ -2979,7 +2979,7 @@ export default class IFrameNavigator implements Navigator {
       };
 
       this.stopReadAloud();
-      this.navigate(position, 'Another great page on the way...');
+      this.navigate(position);
     } else {
       if (this.nextChapterLink) {
         const position: Locator = {
@@ -2992,7 +2992,7 @@ export default class IFrameNavigator implements Navigator {
         };
 
         this.stopReadAloud();
-        this.navigate(position, 'Another great page on the way...');
+        this.navigate(position);
       }
     }
     if (event) {
@@ -3321,7 +3321,7 @@ export default class IFrameNavigator implements Navigator {
           created: new Date(),
           title: startLink.Title,
         };
-        await this.navigate(position);
+        await this.navigate(position, loadingMessage);
       }
     }
   }
