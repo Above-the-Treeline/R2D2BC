@@ -557,7 +557,12 @@ export default class IFrameNavigator implements Navigator {
         "#reader-loading"
       ) as HTMLDivElement;
       if (this.loadingMessage) {
-        this.loadingMessage.innerHTML = `<div>${readerLoading}<p id="pageNavigationLoadingMessage"></p></div>`;
+        this.loadingMessage.innerHTML = `
+          <div>
+            ${readerLoading}
+            <p id="pageNavigationLoadingMessage"></p>
+          </div>
+        `;
         this.loadingMessage.style.display = "none";
       }
       this.errorMessage = HTMLUtilities.findElement(
@@ -1440,7 +1445,7 @@ export default class IFrameNavigator implements Navigator {
 
   private async handleIFrameLoad(): Promise<void> {
     if (this.errorMessage) this.errorMessage.style.display = "none";
-    this.showLoadingMessageAfterDelay('Pulling your book from the shelf...');
+    this.showLoadingMessageAfterDelay();
     try {
       let bookViewPosition = 0;
       if (this.newPosition) {
@@ -2933,7 +2938,7 @@ export default class IFrameNavigator implements Navigator {
       };
 
       this.stopReadAloud();
-      this.navigate(position, 'Loading previous page');
+      this.navigate(position, 'Another great page on the way...');
     } else {
       if (this.previousChapterLink) {
         const position: Locator = {
@@ -2946,7 +2951,7 @@ export default class IFrameNavigator implements Navigator {
         };
 
         this.stopReadAloud();
-        this.navigate(position, 'Loading previous page');
+        this.navigate(position, 'Another great page on the way...');
       }
     }
     if (event) {
@@ -2974,7 +2979,7 @@ export default class IFrameNavigator implements Navigator {
       };
 
       this.stopReadAloud();
-      this.navigate(position, 'Loading next page');
+      this.navigate(position, 'Another great page on the way...');
     } else {
       if (this.nextChapterLink) {
         const position: Locator = {
@@ -2987,7 +2992,7 @@ export default class IFrameNavigator implements Navigator {
         };
 
         this.stopReadAloud();
-        this.navigate(position, 'Loading next page');
+        this.navigate(position, 'Another great page on the way...');
       }
     }
     if (event) {
