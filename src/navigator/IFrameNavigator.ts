@@ -558,11 +558,13 @@ export default class IFrameNavigator implements Navigator {
       ) as HTMLDivElement;
       if (this.loadingMessage) {
         this.loadingMessage.innerHTML = `
-          <div>
-            ${readerLoading}
-            <p id="pageNavigationLoadingMessage"></p>
+          <div class="absolute-flex-container">
+            <div class="loading-icon-and-message-container">
+              ${readerLoading}  
+              <p id="pageLoadingMessage"></p>
+            </div>
           </div>
-        `;
+        `
         this.loadingMessage.style.display = "none";
       }
       this.errorMessage = HTMLUtilities.findElement(
@@ -3353,7 +3355,7 @@ export default class IFrameNavigator implements Navigator {
     if (message && this.isLoading && this.loadingMessage) {
       this.loadingMessage.style.display = "block";
       this.loadingMessage.classList.add("is-loading");
-      const messageContainer = document.getElementById('pageNavigationLoadingMessage')
+      const messageContainer = document.getElementById('pageLoadingMessage')
       messageContainer.innerText = ''
       messageContainer.innerText = `${message}`
     } else if (this.isLoading && this.loadingMessage) {
