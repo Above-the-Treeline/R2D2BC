@@ -1447,7 +1447,7 @@ export default class IFrameNavigator implements Navigator {
 
   private async handleIFrameLoad(): Promise<void> {
     if (this.errorMessage) this.errorMessage.style.display = "none";
-    this.showLoadingMessageAfterDelay('Pulling your book from the shelf...');
+    this.showLoadingMessageAfterDelay();
     try {
       let bookViewPosition = 0;
       if (this.newPosition) {
@@ -2940,7 +2940,7 @@ export default class IFrameNavigator implements Navigator {
       };
 
       this.stopReadAloud();
-      this.navigate(position, 'Loading previous page');
+      this.navigate(position);
     } else {
       if (this.previousChapterLink) {
         const position: Locator = {
@@ -2953,7 +2953,7 @@ export default class IFrameNavigator implements Navigator {
         };
 
         this.stopReadAloud();
-        this.navigate(position, 'Loading previous page');
+        this.navigate(position);
       }
     }
     if (event) {
@@ -2981,7 +2981,7 @@ export default class IFrameNavigator implements Navigator {
       };
 
       this.stopReadAloud();
-      this.navigate(position, 'Loading next page');
+      this.navigate(position);
     } else {
       if (this.nextChapterLink) {
         const position: Locator = {
@@ -2994,7 +2994,7 @@ export default class IFrameNavigator implements Navigator {
         };
 
         this.stopReadAloud();
-        this.navigate(position, 'Loading next page');
+        this.navigate(position);
       }
     }
     if (event) {
