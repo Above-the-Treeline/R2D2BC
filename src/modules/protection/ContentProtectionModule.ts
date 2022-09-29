@@ -987,7 +987,11 @@ export default class ContentProtectionModule implements ReaderModule {
     const windowBottom = windowTop + window.innerHeight;
 
     const isAbove = bottom < windowTop;
-    const isBelow = rect.top > windowBottom;
+
+    // Since scrolling mode is disabled for fixed layout epubs,
+    // we can safely ignore the possibility that a TextNode is "outside" 
+    // the bottom of the viewport for those epubs.
+    const isBelow = (rect.top > windowBottom) && !this.delegate.publication.isFixedLayout();
 
     // Consider left boundary to be one full screen width left of the leftmost
     // edge of the viewing area. This is so text originating on the previous

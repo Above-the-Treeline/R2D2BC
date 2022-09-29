@@ -211,4 +211,12 @@ export class Publication extends R2Publication {
         .length > 0
       : false;
   }
+
+  public getLayout(): string {
+    return this.Metadata.Rendition?.Layout ?? "unknown";
+  }
+
+  public isFixedLayout(): boolean {
+    return this.getLayout() === "fixed"
+  }
 }
