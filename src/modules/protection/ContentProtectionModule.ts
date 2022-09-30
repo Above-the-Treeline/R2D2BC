@@ -909,15 +909,23 @@ export default class ContentProtectionModule implements ReaderModule {
     const outsideViewport = this.isOutsideViewport(rect);
     const beingHacked = this.isBeingHacked(securityContainer);
 
-    if (rect.isObfuscated && !outsideViewport && !beingHacked && !isHacked) {
-      rect.node.textContent = rect.textContent;
-      rect.isObfuscated = false;
+    if (this.delegate.publication.isFixedLayout()) {
+      if (rect.isObfuscated) {
+        rect.node.textContent = rect.textContent;
+        rect.isObfuscated = false;
+      }
+    } else {
+      if (rect.isObfuscated && !outsideViewport && !beingHacked && !isHacked) {
+        rect.node.textContent = rect.textContent;
+        rect.isObfuscated = false;
+      }
+  
+      if (!rect.isObfuscated && (outsideViewport || beingHacked || isHacked)) {
+        rect.node.textContent = rect.scrambledTextContent;
+        rect.isObfuscated = true;
+      }
     }
 
-    if (!rect.isObfuscated && (outsideViewport || beingHacked || isHacked)) {
-      rect.node.textContent = rect.scrambledTextContent;
-      rect.isObfuscated = true;
-    }
   }
 
   findRects(parent: HTMLElement): Array<ContentProtectionRect> {
@@ -987,11 +995,7 @@ export default class ContentProtectionModule implements ReaderModule {
     const windowBottom = windowTop + window.innerHeight;
 
     const isAbove = bottom < windowTop;
-
-    // Since scrolling mode is disabled for fixed layout epubs,
-    // we can safely ignore the possibility that a TextNode is "outside" 
-    // the bottom of the viewport for those epubs.
-    const isBelow = (rect.top > windowBottom) && !this.delegate.publication.isFixedLayout();
+    const isBelow = rect.top > windowBottom;
 
     // Consider left boundary to be one full screen width left of the leftmost
     // edge of the viewing area. This is so text originating on the previous
