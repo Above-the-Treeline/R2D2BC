@@ -675,6 +675,8 @@ export default class ContentProtectionModule implements ReaderModule {
           }, 10);
         }
       });
+    } else {
+      this.setupEvents();
     }
   }
 
